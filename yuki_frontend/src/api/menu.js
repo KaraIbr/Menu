@@ -8,7 +8,7 @@ export const getMenu = async (slug = 'yuki') => {
     await new Promise(resolve => setTimeout(resolve, 500));
     return mockMenu;
   }
-  const response = await api.get(`/menu/${slug}/`);
+  const response = await api.get(`/menu/`);
   return response.data;
 };
 
@@ -21,6 +21,6 @@ export const getProduct = async (productId) => {
     }
     throw new Error('Producto no encontrado');
   }
-  const response = await api.get(`/menu/yuki/products/${productId}/`);
+  const response = await api.get(`/menu/products/${productId}/`);
   return response.data;
 };
