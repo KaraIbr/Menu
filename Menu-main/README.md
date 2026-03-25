@@ -1,0 +1,669 @@
+1. Descripción general del proyecto
+Yuki es un sistema de punto de venta (POS) en formato kiosk diseñado para negocios de bebidas artesanales como matcherías y cafeterías. El sistema permite a los clientes realizar sus pedidos de forma autónoma desde una pantalla táctil, seleccionando productos del menú junto con sus modificadores (extras, toppings, tipo de leche, etc.).
+
+El administrador del negocio gestiona todo el catálogo —alimentos, bebidas, extras y toppings— desde el panel de administración de Django. El personal de cocina o barra recibe y gestiona los pedidos en tiempo real desde un panel dedicado.
+
+1.1 Objetivos del sistema
+Permitir al cliente realizar pedidos personalizados sin intervención del personal
+Dar al administrador control total del menú desde el panel Django Admin
+Mostrar al barista/cocina las órdenes activas y su estado en tiempo real
+Servir como proyecto escolar evaluable y pieza de portafolio profesional
+
+1.2 Alcance
+Módulo
+Descripción
+Usuario
+Kiosk (frontend)
+Pantalla táctil para ordenar bebidas y alimentos
+Cliente final
+Panel barista
+Vista de órdenes activas y cambio de estado
+Personal del negocio
+Django Admin
+CRUD de categorías, productos, extras y toppings
+Administrador
+API REST
+Backend que conecta kiosk y panel con la base de datos
+Sistema interno
+
+
+
+2. Stack tecnológico
+Capa
+Tecnología
+Versión
+Justificación
+Backend / API
+Django + DRF
+5.x / 3.x
+Requerido por rúbrica escolar
+Base de datos
+PostgreSQL
+15+
+Requerido por rúbrica (SQLite anula el punto)
+Frontend
+React + Vite
+18 / 5.x
+SPA rápida, componentes reutilizables
+Estilos
+Tailwind CSS
+3.x
+Diseño consistente sin CSS personalizado
+Auth tokens
+djangorestframework-simplejwt
+última
+JWT para panel barista
+CORS
+django-cors-headers
+última
+Permite llamadas desde React en :5173
+Imágenes
+Pillow
+última
+Procesamiento de fotos de productos
+Estado global
+Zustand
+última
+Carrito del kiosk, liviano y simple
+HTTP cliente
+Axios
+última
+Llamadas a la API desde React
+Entorno
+python-decouple + .env
+—
+Variables de entorno seguras
+
+
+
+3. Arquitectura del sistema
+El sistema sigue una arquitectura cliente-servidor desacoplada. El backend Django expone una API REST que el frontend React consume via HTTP. Ambos corren en la misma red local durante el desarrollo y entrega.
+
+3.1 Estructura del backend
+yuki_backend/
+├── manage.py
+├── .env
+├── requirements.txt
+├── yuki_backend/
+│   ├── settings.py        # Configuración general
+│   ├── urls.py            # Router principal
+│   └── wsgi.py
+├── apps/
+│   ├── menu/              # Category, Product, Extra, Topping
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   ├── urls.py
+│   │   └── admin.py
+│   └── orders/            # Order, OrderItem, OrderItemModifier
+│       ├── models.py
+│       ├── serializers.py
+│       ├── views.py
+│       ├── urls.py
+│       └── admin.py
+└── media/                 # Imágenes subidas por el admin
+
+3.2 Estructura del frontend
+yuki_frontend/
+├── index.html
+├── vite.config.js
+├── tailwind.config.js
+├── .env                   # VITE_API_URL=http://localhost:8000/api
+└── src/
+    ├── api/               # axios.js, menu.js, orders.js
+    ├── store/             # cartStore.js, authStore.js (Zustand)
+    ├── pages/             # KioskPage, BaristaPage, LoginPage
+    ├── components/
+    │   ├── kiosk/         # CategoryBar, ProductGrid, ProductModal, CartDrawer
+    │   ├── barista/       # OrderCard, OrderList, StatusBadge
+    │   └── shared/        # Navbar, LoadingSpinner
+    └── hooks/             # useMenu.js, useOrders.js
+
+
+4. Base de datos
+La base de datos utiliza PostgreSQL. Los modelos están definidos en Django ORM y se relacionan entre sí mediante llaves foráneas. El administrador del sistema carga y gestiona todo el contenido a través del panel Django Admin.
+
+4.1 Diagrama de relaciones
+Modelo
+Relación
+Modelo destino
+Tipo
+Category
+—
+(raíz del menú)
+—
+Product
+pertenece a
+Category
+ForeignKey
+ModifierGroup
+pertenece a
+Product
+ForeignKey
+Modifier
+pertenece a
+ModifierGroup
+ForeignKey
+Order
+—
+(raíz del pedido)
+—
+OrderItem
+pertenece a
+Order
+ForeignKey
+OrderItem
+referencia
+Product
+ForeignKey (PROTECT)
+OrderItemModifier
+pertenece a
+OrderItem
+ForeignKey
+OrderItemModifier
+referencia
+Modifier
+ForeignKey (PROTECT)
+
+
+4.2 Modelos detallados
+Category — Categoría del menú
+Agrupa los productos del menú (ej: Matcha, Café, Alimentos, Toppings). El administrador define el orden de aparición en el kiosk.
+Campo
+Tipo Django
+Descripción
+id
+AutoField (PK)
+Identificador único automático
+nombre
+CharField(80)
+Nombre visible de la categoría
+descripcion
+TextField (blank)
+Descripción opcional
+icono
+CharField(50) (blank)
+Nombre del ícono (ej: "leaf", "coffee")
+orden
+PositiveIntegerField
+Orden de aparición en el kiosk
+activo
+BooleanField
+Si la categoría es visible en el kiosk
+
+
+Product — Producto / bebida / alimento
+Cualquier ítem orderable: bebidas, alimentos, postres. Puede tener modificadores (extras, toppings). El admin carga imagen, precio y descripción.
+Campo
+Tipo Django
+Descripción
+id
+AutoField (PK)
+Identificador único automático
+category
+ForeignKey → Category
+Categoría a la que pertenece
+nombre
+CharField(120)
+Nombre del producto
+descripcion
+TextField (blank)
+Descripción para el kiosk
+precio_base
+DecimalField(8,2)
+Precio sin modificadores
+imagen
+ImageField (blank)
+Foto del producto (upload_to=products/)
+disponible
+BooleanField
+Si se puede ordenar en este momento
+activo
+BooleanField
+Si aparece en el menú
+
+
+ModifierGroup — Grupo de opciones
+Define un grupo de opciones personalizables para un producto. Ejemplos: "Tipo de leche" (requerido, elige 1), "Extras" (opcional, hasta 3), "Toppings" (opcional, hasta 5).
+Campo
+Tipo Django
+Descripción
+id
+AutoField (PK)
+Identificador único automático
+product
+ForeignKey → Product
+Producto al que pertenece
+nombre
+CharField(80)
+Nombre del grupo (ej: "Tipo de leche")
+requerido
+BooleanField
+Si el cliente debe elegir al menos una opción
+min_select
+PositiveIntegerField
+Mínimo de opciones a seleccionar
+max_select
+PositiveIntegerField
+Máximo de opciones a seleccionar
+orden
+PositiveIntegerField
+Orden de aparición en el modal del producto
+
+
+Modifier — Opción individual (extra / topping)
+Una opción dentro de un ModifierGroup. Puede tener costo extra. El admin carga todos los extras y toppings disponibles aquí.
+Campo
+Tipo Django
+Descripción
+id
+AutoField (PK)
+Identificador único automático
+group
+ForeignKey → ModifierGroup
+Grupo al que pertenece
+nombre
+CharField(80)
+Nombre de la opción (ej: "Oat milk", "Boba")
+precio_extra
+DecimalField(6,2)
+Costo adicional (0.00 si es sin cargo)
+activo
+BooleanField
+Si la opción está disponible
+
+
+Order — Pedido completo
+Registro de cada pedido realizado desde el kiosk. El estado avanza conforme el personal procesa la orden.
+Campo
+Tipo Django
+Descripción
+id
+AutoField (PK)
+Identificador único automático
+numero_orden
+PositiveIntegerField
+Número visible para el cliente (ej: #7)
+total
+DecimalField(10,2)
+Total calculado por el backend
+estado
+CharField choices
+pendiente / preparando / listo / entregado / cancelado
+metodo_pago
+CharField choices
+efectivo / tarjeta / qr
+notas
+TextField (blank)
+Notas generales del pedido
+created_at
+DateTimeField auto
+Fecha y hora de creación
+
+
+OrderItem — Línea del pedido
+Campo
+Tipo Django
+Descripción
+id
+AutoField (PK)
+Identificador único automático
+order
+ForeignKey → Order
+Pedido al que pertenece
+product
+ForeignKey → Product (PROTECT)
+Producto ordenado
+cantidad
+PositiveIntegerField
+Número de unidades
+precio_unitario
+DecimalField(8,2)
+Precio al momento de ordenar (snapshot)
+notas
+TextField (blank)
+Notas específicas del ítem
+
+
+OrderItemModifier — Modificador aplicado
+Registra qué extras o toppings fueron seleccionados para cada línea del pedido. El precio se guarda como snapshot para preservar el histórico.
+Campo
+Tipo Django
+Descripción
+id
+AutoField (PK)
+Identificador único automático
+order_item
+ForeignKey → OrderItem
+Línea a la que pertenece
+modifier
+ForeignKey → Modifier (PROTECT)
+Opción seleccionada
+precio_extra
+DecimalField(6,2)
+Precio al momento de ordenar (snapshot)
+
+
+
+5. Panel de administración Django
+El administrador gestiona todo el catálogo desde el panel nativo de Django Admin. No existe una interfaz separada para esta función. Cada modelo está registrado con filtros, búsqueda y campos optimizados.
+
+5.1 Configuración por modelo
+Modelo
+list_display
+search_fields
+list_filter
+Category
+nombre, orden, activo
+nombre, descripcion
+activo
+Product
+nombre, category, precio_base, disponible, activo
+nombre, descripcion, category__nombre
+activo, disponible, category
+ModifierGroup
+nombre, product, requerido, min_select, max_select
+nombre, product__nombre
+requerido
+Modifier
+nombre, group, precio_extra, activo
+nombre, group__nombre
+activo
+Order
+numero_orden, total, estado, metodo_pago, created_at
+numero_orden, notas
+estado, metodo_pago
+OrderItem
+order, product, cantidad, precio_unitario
+product__nombre
+—
+
+
+5.2 Inlines configurados
+ModifierGroupInline dentro de ProductAdmin — permite crear grupos de modificadores directamente al editar un producto
+ModifierInline dentro de ModifierGroupAdmin — permite agregar opciones al editar un grupo
+OrderItemInline dentro de OrderAdmin — vista de solo lectura de los ítems de cada pedido
+
+
+6. API REST
+El backend expone una API REST construida con Django REST Framework. Todos los endpoints están bajo el prefijo /api/. La API corre en http://localhost:8000 durante desarrollo.
+
+6.1 Endpoints del menú (públicos)
+Método
+Endpoint
+Descripción
+Auth
+GET
+/api/menu/
+Menú completo con categorías, productos y modificadores anidados
+No
+GET
+/api/menu/products/
+Lista de productos (filtros: ?category=id&disponible=true)
+No
+GET
+/api/menu/products/{id}/
+Detalle de un producto con todos sus modifier_groups
+No
+GET
+/api/menu/categories/
+Lista de categorías activas
+No
+
+
+6.2 Endpoints de órdenes
+Método
+Endpoint
+Descripción
+Auth
+POST
+/api/orders/
+Crear nueva orden desde el kiosk
+No
+GET
+/api/orders/
+Listar órdenes activas (panel barista)
+JWT
+GET
+/api/orders/{id}/
+Detalle de una orden específica
+JWT
+PATCH
+/api/orders/{id}/estado/
+Cambiar estado de la orden
+JWT
+
+
+6.3 Autenticación
+Método
+Endpoint
+Descripción
+POST
+/api/auth/token/
+Obtener access + refresh token (login del barista)
+POST
+/api/auth/token/refresh/
+Obtener nuevo access token con el refresh token
+
+
+6.4 Estructura JSON — GET /api/menu/
+{
+  "categories": [
+    {
+      "id": 1,
+      "nombre": "Matcha",
+      "icono": "leaf",
+      "orden": 1,
+      "products": [
+        {
+          "id": 1,
+          "nombre": "Matcha Latte",
+          "descripcion": "Matcha ceremonial con leche oat",
+          "precio_base": "75.00",
+          "imagen": "/media/products/matcha-latte.jpg",
+          "disponible": true,
+          "modifier_groups": [
+            {
+              "id": 1,
+              "nombre": "Tipo de leche",
+              "requerido": true,
+              "min_select": 1, "max_select": 1,
+              "modifiers": [
+                { "id": 1, "nombre": "Oat milk", "precio_extra": "0.00" },
+                { "id": 3, "nombre": "Almendra", "precio_extra": "10.00" }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
+6.5 Estructura JSON — POST /api/orders/
+Request (desde el kiosk):
+{
+  "metodo_pago": "tarjeta",
+  "notas": "Sin hielo por favor",
+  "items": [
+    {
+      "product": 1,
+      "cantidad": 2,
+      "notas": "Extra shot",
+      "selected_modifiers": [
+        { "modifier": 3, "precio_extra": "10.00" }
+      ]
+    }
+  ]
+}
+
+Response 201 Created:
+{ "id": 42, "numero_orden": 7, "total": "170.00", "estado": "pendiente", "created_at": "..." }
+
+
+7. Frontend — Yuki Kiosk
+El frontend es una Single Page Application (SPA) desarrollada en React 18 con Vite. Consume la API REST del backend via Axios. El estado del carrito se gestiona con Zustand.
+
+7.1 Rutas de la aplicación
+Ruta
+Componente
+Descripción
+Auth
+/
+Redirect
+Redirige a /kiosk
+No
+/kiosk
+KioskPage
+Pantalla principal del cliente
+No
+/login
+LoginPage
+Login del barista (JWT)
+No
+/barista
+BaristaPage
+Panel de órdenes del personal
+JWT
+
+
+7.2 Flujo del kiosk — pantalla a pantalla
+Pantalla principal
+Barra de categorías horizontal con scroll
+Grid de productos 2-3 columnas según pantalla
+Tarjeta de producto: imagen, nombre, precio base
+Productos con disponible: false se muestran opacos sin botón de acción
+Ícono del carrito en esquina superior con contador de ítems
+
+Modal de producto
+Imagen grande, nombre y descripción
+Por cada ModifierGroup: título, indicador de requerido, opciones como radio (max 1) o checkbox (max > 1)
+Precio extra visible en cada opción
+Precio total actualizado en tiempo real
+Botón "Agregar" deshabilitado si hay grupos requeridos incompletos
+Campo de notas libre opcional
+
+Carrito
+Panel lateral deslizable (slide-in derecha)
+Lista de ítems con modificadores seleccionados, cantidad y precio
+Botones + y − para ajustar cantidad, botón eliminar ítem
+Total calculado al fondo
+Botón "Confirmar pedido"
+
+Confirmación y pago
+Resumen final de la orden
+Selección de método de pago: efectivo / tarjeta / QR
+Campo de notas generales del pedido
+Botón "Hacer pedido" → POST /api/orders/
+En éxito: pantalla con número de orden asignado
+
+7.3 Panel barista
+Login simple con email y contraseña → obtiene JWT
+Grid de tarjetas agrupadas por estado: Pendiente / Preparando / Listo
+Cada tarjeta muestra número de orden, ítems con modificadores y tiempo transcurrido
+Botones para avanzar el estado de la orden
+Polling automático cada 15 segundos para detectar nuevas órdenes
+
+
+8. División del trabajo y trabajo en paralelo
+El proyecto está desarrollado por dos personas trabajando en paralelo. La sincronización se da a través del contrato de API definido en este documento.
+
+8.1 Responsabilidades
+Responsabilidad
+Persona 1 (Backend)
+Persona 2 (Frontend)
+models.py + migraciones
+X
+—
+admin.py con filtros e inlines
+X
+—
+Serializers DRF
+X
+—
+Views y endpoints API
+X
+—
+Configuración CORS + JWT
+X
+—
+Datos de ejemplo (fixtures)
+X
+—
+Pantalla kiosk (cliente)
+—
+X
+Modal de producto y modificadores
+—
+X
+Carrito con Zustand
+—
+X
+Flujo de confirmación y pago
+—
+X
+Panel barista + polling
+—
+X
+Login barista (JWT en frontend)
+—
+X
+
+
+8.2 Estrategia de desacoplamiento
+Para que ambos integrantes puedan trabajar sin bloquearse, el frontend usa datos mock mientras el backend no está listo:
+
+Variable VITE_USE_MOCK=true en .env activa datos locales en el frontend
+Al estar lista la API, se cambia a VITE_USE_MOCK=false sin modificar el código
+El contrato de API (sección 6) es el punto de sincronización — ambos lo respetan
+CORS configurado para http://localhost:5173 desde el primer día
+
+
+9. Instrucciones de instalación
+9.1 Backend (Django + PostgreSQL)
+Requisitos previos: Python 3.11+, PostgreSQL 15+ instalado y corriendo.
+
+Clonar el repositorio y entrar a la carpeta del backend
+Crear entorno virtual: python -m venv venv
+Activar entorno: source venv/bin/activate (Linux/Mac) o venv\Scripts\activate (Windows)
+Instalar dependencias: pip install -r requirements.txt
+Crear base de datos en PostgreSQL: CREATE DATABASE yuki_db;
+Crear archivo .env con las variables de entorno (ver sección 9.3)
+Correr migraciones: python manage.py migrate
+Crear superusuario: python manage.py createsuperuser
+Cargar datos de ejemplo: python manage.py loaddata fixtures/yuki_demo.json
+Iniciar servidor: python manage.py runserver 0.0.0.0:8000
+
+Panel admin disponible en: http://localhost:8000/admin/
+API disponible en: http://localhost:8000/api/
+
+9.2 Frontend (React + Vite)
+Requisitos previos: Node.js 18+
+
+Entrar a la carpeta del frontend
+Instalar dependencias: npm install
+Crear archivo .env con VITE_API_URL=http://localhost:8000/api
+Iniciar en desarrollo: npm run dev
+
+Kiosk disponible en: http://localhost:5173/kiosk
+Panel barista en: http://localhost:5173/barista
+
+9.3 Variables de entorno
+Backend — archivo .env en la raíz del proyecto Django:
+SECRET_KEY=tu_clave_secreta_aqui
+DEBUG=True
+DB_NAME=yuki_db
+DB_USER=postgres
+DB_PASSWORD=tu_password
+DB_HOST=localhost
+DB_PORT=5432
+
+Frontend — archivo .env en la raíz del proyecto React:
+
+
+
+
+
+
+
+YUKI — Sistema Kiosk POS
