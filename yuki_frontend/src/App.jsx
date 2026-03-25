@@ -1,49 +1,21 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import KioskPage from './pages/KioskPage';
-import BaristaPage from './pages/BaristaPage';
-import LoginPage from './pages/LoginPage';
 import useAuthStore from './store/authStore';
+import HomePage from './pages/HomePage';
+import KioskPage from './pages/KioskPage';
+import LoginPage from './pages/LoginPage';
+import BaristaPage from './pages/BaristaPage';
 
-function ProtectedRoute({ children }) {
-  const { isAuthenticated } = useAuthStore();
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  return children;
-}
+const ProtectedRoute = ({ children }) => {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
+};
 
 function App() {
   return (
     <BrowserRouter>
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            background: '#2C2C2A',
-            color: '#FFFFFF',
-            borderRadius: '12px',
-          },
-          success: {
-            iconTheme: {
-              primary: '#1D9E75',
-              secondary: '#FFFFFF',
-            },
-          },
-          error: {
-            iconTheme: {
-              primary: '#EF4444',
-              secondary: '#FFFFFF',
-            },
-          },
-        }}
-      />
-      
       <Routes>
-        <Route path="/" element={<Navigate to="/kiosk" replace />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/kiosk" element={<KioskPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route
@@ -55,6 +27,17 @@ function App() {
           }
         />
       </Routes>
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            fontFamily: 'Poppins, sans-serif',
+            background: '#3e3a36',
+            color: '#f2efea',
+          },
+        }}
+      />
     </BrowserRouter>
   );
 }

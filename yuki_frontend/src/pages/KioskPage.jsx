@@ -1,114 +1,97 @@
 import { useState, useMemo } from 'react';
-import { ShoppingCart } from 'lucide-react';
 import Navbar from '../components/shared/Navbar';
-import LoadingSpinner from '../components/shared/LoadingSpinner';
 import CategoryBar from '../components/kiosk/CategoryBar';
-import ProductGrid from '../components/kiosk/ProductGrid';
+import { ProductGrid } from '../components/kiosk/ProductCard';
 import ProductModal from '../components/kiosk/ProductModal';
 import CartDrawer from '../components/kiosk/CartDrawer';
-import OrderConfirm from '../components/kiosk/OrderConfirm';
+import { SkeletonCategoryBar, SkeletonProductGrid } from '../components/shared/Skeleton';
 import useMenu from '../hooks/useMenu';
 import useCartStore from '../store/cartStore';
+import toast from 'react-hot-toast';
 
-function KioskPage() {
-  const { menu, loading, error } = useMenu();
+const KioskPage = () => {
+  const { categories, loading, error, refetch } = useMenu();
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const itemCount = useCartStore(state => state.getItemCount());
-  
-  const filteredProducts = useMemo(() => {
-    if (!menu) return [];
+  const addItem = useCartStore((state) => state.addItem);
+
+  const products = useMemo(() => {
+    if (!categories.length) return [];
+    
     if (selectedCategory === null) {
-      return menu.categories.flatMap(cat => cat.products);
+      return categories.flatMap((cat) => cat.products || []);
     }
-    const category = menu.categories.find(cat => cat.id === selectedCategory);
-    return category ? category.products : [];
-  }, [menu, selectedCategory]);
-  
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-yuki-surface flex items-center justify-center">
-        <LoadingSpinner size="lg" text="Cargando menú..." />
-      </div>
-    );
-  }
-  
+    
+    const category = categories.find((cat) => cat.id === selectedCategory);
+    return category?.products || [];
+  }, [categories, selectedCategory]);
+
+  const handleAddToCart = (product, modifiers, quantity, notes) => {
+    addItem(product, modifiers, quantity, notes);
+    toast.success(`${quantity}x ${product.nombre} agregado al carrito`);
+  };
+
   if (error) {
     return (
-      <div className="min-h-screen bg-yuki-surface flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl">😔</span>
-          </div>
-          <h2 className="text-xl font-semibold text-yuki-ink mb-2">
-            Error al cargar
-          </h2>
-          <p className="text-yuki-muted">{error}</p>
-        </div>
+      <div className="min-h-screen bg-paper flex flex-col items-center justify-center p-6">
+        <p className="font-poppins text-ink/60 mb-4 text-center">
+          No se pudo cargar el menú
+        </p>
+        <button onClick={refetch} className="btn-secondary">
+          Reintentar
+        </button>
       </div>
     );
   }
-  
+
   return (
-    <div className="min-h-screen bg-yuki-surface">
-      <Navbar showBaristaLink />
+    <div className="min-h-screen bg-paper pb-24">
+      <Navbar onCartClick={() => setIsCartOpen(true)} />
       
-      <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-        <div className="text-center">
-          <h1 className="text-3xl font-semibold text-yuki-ink mb-2">
-            {menu?.tenant?.nombre || 'Yuki'}
-          </h1>
-          <p className="text-yuki-muted">Tu ritual, tu manera</p>
-        </div>
-        
-        <CategoryBar
-          categories={menu?.categories || []}
-          selectedCategory={selectedCategory}
-          onSelectCategory={setSelectedCategory}
+      {loading ? (
+        <>
+          <SkeletonCategoryBar />
+          <SkeletonProductGrid />
+        </>
+      ) : (
+        <>
+          <CategoryBar
+            categories={categories}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+          />
+          
+          <ProductGrid
+            products={products}
+            onProductClick={setSelectedProduct}
+          />
+        </>
+      )}
+
+      {selectedProduct && (
+        <ProductModal
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+          onAddToCart={handleAddToCart}
         />
-        
-        <ProductGrid
-          products={filteredProducts}
-          onProductClick={setSelectedProduct}
-        />
-      </div>
-      
-      <button
-        onClick={() => setIsCartOpen(true)}
-        className="fixed bottom-6 right-6 w-16 h-16 bg-yuki-purple text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center z-30"
-      >
-        <ShoppingCart className="w-6 h-6" />
-        {itemCount > 0 && (
-          <span className="absolute -top-2 -right-2 w-7 h-7 bg-yuki-teal rounded-full flex items-center justify-center text-sm font-bold">
-            {itemCount}
-          </span>
-        )}
-      </button>
-      
-      <ProductModal
-        product={selectedProduct}
-        isOpen={!!selectedProduct}
-        onClose={() => setSelectedProduct(null)}
-      />
-      
+      )}
+
       <CartDrawer
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
-        onConfirm={() => {
-          setIsCartOpen(false);
-          setIsConfirmOpen(true);
-        }}
       />
-      
-      <OrderConfirm
-        isOpen={isConfirmOpen}
-        onClose={() => setIsConfirmOpen(false)}
-        tenantId={menu?.tenant?.id}
-      />
+
+      <button
+        onClick={() => setIsCartOpen(true)}
+        className="fixed bottom-6 right-6 bg-cobalt text-nano rounded-full p-4 shadow-doodle transition-all duration-150 active:scale-95 active:shadow-none z-30 touch-target"
+      >
+        <span className="font-fredoka font-bold text-xl">
+          Ver pedido
+        </span>
+      </button>
     </div>
   );
-}
+};
 
 export default KioskPage;

@@ -1,44 +1,37 @@
-import { Link, useLocation } from 'react-router-dom';
-import { Coffee, User } from 'lucide-react';
+import { ShoppingCart } from '@phosphor-icons/react';
+import useCartStore from '../../store/cartStore';
+import { useNavigate } from 'react-router-dom';
 
-function Navbar({ showBaristaLink = false }) {
-  const location = useLocation();
-  
+const Navbar = ({ showCart = true, onCartClick }) => {
+  const itemCount = useCartStore((state) => state.getItemCount());
+  const navigate = useNavigate();
+
   return (
-    <nav className="bg-white shadow-sm sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <Link to="/kiosk" className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-yuki-purple rounded-xl flex items-center justify-center">
-              <Coffee className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-2xl font-semibold text-yuki-purple">Yuki</span>
-          </Link>
-          
-          <div className="flex items-center gap-4">
-            {showBaristaLink && location.pathname !== '/barista' && (
-              <Link 
-                to="/barista"
-                className="flex items-center gap-2 px-4 py-2 text-yuki-muted hover:text-yuki-purple transition-colors"
-              >
-                <User className="w-5 h-5" />
-                <span className="hidden sm:inline">Panel Barista</span>
-              </Link>
+    <header className="sticky top-0 z-40 bg-paper border-b-2 border-ink px-4 py-3">
+      <div className="flex items-center justify-between max-w-lg mx-auto">
+        <button
+          onClick={() => navigate('/')}
+          className="font-fredoka font-bold text-2xl text-cobalt touch-target flex items-center"
+        >
+          Yuki
+        </button>
+        
+        {showCart && (
+          <button
+            onClick={onCartClick}
+            className="relative bg-nano rounded-2xl border-2 border-ink shadow-doodle-sm p-3 transition-all duration-150 active:scale-95 active:shadow-none touch-target"
+          >
+            <ShoppingCart size={28} weight="bold" />
+            {itemCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-cobalt text-nano text-sm font-bold w-6 h-6 rounded-full flex items-center justify-center">
+                {itemCount}
+              </span>
             )}
-            {location.pathname === '/barista' && (
-              <Link 
-                to="/kiosk"
-                className="flex items-center gap-2 px-4 py-2 text-yuki-muted hover:text-yuki-purple transition-colors"
-              >
-                <Coffee className="w-5 h-5" />
-                <span className="hidden sm:inline">Kiosk</span>
-              </Link>
-            )}
-          </div>
-        </div>
+          </button>
+        )}
       </div>
-    </nav>
+    </header>
   );
-}
+};
 
 export default Navbar;

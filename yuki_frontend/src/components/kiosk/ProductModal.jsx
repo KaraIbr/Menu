@@ -1,189 +1,169 @@
-import { useState, useEffect } from 'react';
-import { X, Plus, Check } from 'lucide-react';
-import { getMediaUrl } from '../../api/axios';
-import useCartStore from '../../store/cartStore';
+import { useState, useMemo } from 'react';
+import { X, Plus, Minus, Check } from '@phosphor-icons/react';
+import { getFullImageUrl } from '../../api/menu';
 
-function ProductModal({ product, isOpen, onClose }) {
+const ProductModal = ({ product, onClose, onAddToCart }) => {
   const [selectedModifiers, setSelectedModifiers] = useState({});
-  const [notas, setNotas] = useState('');
-  const [isAdding, setIsAdding] = useState(false);
-  const addItem = useCartStore(state => state.addItem);
-  
-  useEffect(() => {
-    if (isOpen) {
-      setSelectedModifiers({});
-      setNotas('');
-    }
-  }, [isOpen, product]);
-  
-  if (!isOpen || !product) return null;
-  
-  const basePrice = parseFloat(product.precio_base);
-  
-  const calculateTotal = () => {
-    const extrasTotal = Object.values(selectedModifiers).flat().reduce((sum, mod) => {
-      return sum + parseFloat(mod.precio_extra || 0);
-    }, 0);
-    return basePrice + extrasTotal;
-  };
-  
-  const isRequiredGroupsComplete = () => {
-    if (!product.modifier_groups) return true;
-    return product.modifier_groups.every(group => {
-      if (!group.requerido) return true;
-      const selected = selectedModifiers[group.id] || [];
-      return selected.length >= group.min_select;
-    });
-  };
-  
-  const canAdd = isRequiredGroupsComplete();
-  
-  const handleModifierChange = (group, modifier, isSingleSelect) => {
-    setSelectedModifiers(prev => {
-      const current = prev[group.id] || [];
-      
-      if (isSingleSelect) {
-        return {
-          ...prev,
-          [group.id]: [modifier]
-        };
+  const [quantity, setQuantity] = useState(1);
+  const [notes, setNotes] = useState('');
+
+  const modifierGroups = product.modifier_groups || [];
+
+  const isValid = useMemo(() => {
+    for (const group of modifierGroups) {
+      if (group.requerido) {
+        const selected = selectedModifiers[group.id]?.length || 0;
+        if (selected < group.min_select) return false;
       }
+    }
+    return true;
+  }, [modifierGroups, selectedModifiers]);
+
+  const totalPrice = useMemo(() => {
+    let total = parseFloat(product.precio_base);
+    
+    Object.values(selectedModifiers).forEach((mods) => {
+      mods.forEach((mod) => {
+        total += parseFloat(mod.precio_extra || 0);
+      });
+    });
+    
+    return total * quantity;
+  }, [product.precio_base, selectedModifiers, quantity]);
+
+  const toggleModifier = (groupId, modifier, maxSelect) => {
+    setSelectedModifiers((prev) => {
+      const current = prev[groupId] || [];
+      const isSelected = current.some((m) => m.id === modifier.id);
       
-      const isSelected = current.some(m => m.id === modifier.id);
       if (isSelected) {
         return {
           ...prev,
-          [group.id]: current.filter(m => m.id !== modifier.id)
+          [groupId]: current.filter((m) => m.id !== modifier.id),
         };
       }
       
-      if (group.max_select && current.length >= group.max_select) {
-        return prev;
+      if (maxSelect === 1) {
+        return {
+          ...prev,
+          [groupId]: [modifier],
+        };
       }
       
-      return {
-        ...prev,
-        [group.id]: [...current, modifier]
-      };
+      if (current.length < maxSelect) {
+        return {
+          ...prev,
+          [groupId]: [...current, modifier],
+        };
+      }
+      
+      return prev;
     });
   };
-  
-  const isModifierSelected = (groupId, modifierId) => {
-    const group = selectedModifiers[groupId] || [];
-    return group.some(m => m.id === modifierId);
+
+  const handleAdd = () => {
+    if (!isValid) return;
+    
+    const allModifiers = Object.values(selectedModifiers).flat();
+    onAddToCart(product, allModifiers, quantity, notes);
+    onClose();
   };
-  
-  const handleAddToCart = () => {
-    if (!canAdd) return;
-    
-    setIsAdding(true);
-    
-    const allSelectedModifiers = Object.values(selectedModifiers).flat();
-    
-    addItem(product, allSelectedModifiers, notas);
-    
-    setTimeout(() => {
-      setIsAdding(false);
-      onClose();
-    }, 300);
-  };
-  
-  const total = calculateTotal();
-  const imageUrl = getMediaUrl(product.imagen);
-  
+
+  const imageUrl = getFullImageUrl(product.imagen);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div 
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-ink/60 backdrop-blur-sm"
         onClick={onClose}
       />
       
-      <div className="relative bg-white rounded-3xl w-full max-w-lg max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition-colors"
-        >
-          <X className="w-5 h-5 text-yuki-ink" />
-        </button>
-        
-        <div className="aspect-video bg-yuki-surface relative overflow-hidden flex-shrink-0">
-          {imageUrl ? (
-            <img 
-              src={imageUrl} 
-              alt={product.nombre}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-yuki-purple-light to-yuki-teal-light">
-              <span className="text-6xl">🍵</span>
-            </div>
-          )}
+      <div className="relative bg-paper w-full max-w-lg max-h-[90vh] rounded-t-4xl sm:rounded-3xl overflow-hidden flex flex-col">
+        <div className="sticky top-0 z-10 flex justify-end p-4 bg-paper/95 backdrop-blur-sm">
+          <button
+            onClick={onClose}
+            className="w-12 h-12 rounded-full bg-nano border-2 border-ink shadow-doodle-sm flex items-center justify-center transition-all duration-150 active:scale-95 active:shadow-none"
+          >
+            <X size={24} weight="bold" />
+          </button>
         </div>
         
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="mb-6">
-            <h2 className="text-2xl font-semibold text-yuki-ink mb-2">
+        <div className="overflow-y-auto flex-1 pb-32">
+          <div className="h-56 sm:h-72 bg-paper relative">
+            {imageUrl ? (
+              <img
+                src={imageUrl}
+                alt={product.nombre}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-nano flex items-center justify-center">
+                <span className="font-fredoka text-4xl text-ink/20">Yuki</span>
+              </div>
+            )}
+          </div>
+          
+          <div className="p-6">
+            <h2 className="font-fredoka font-bold text-3xl text-ink mb-2">
               {product.nombre}
             </h2>
+            
             {product.descripcion && (
-              <p className="text-yuki-muted leading-relaxed">
+              <p className="font-poppins text-ink/70 mb-4">
                 {product.descripcion}
               </p>
             )}
-            <p className="text-yuki-purple font-bold text-xl mt-3">
-              ${basePrice.toFixed(2)}
-            </p>
-          </div>
-          
-          {product.modifier_groups && product.modifier_groups.length > 0 && (
+            
             <div className="space-y-6">
-              {product.modifier_groups.map(group => (
+              {modifierGroups.map((group) => (
                 <div key={group.id}>
                   <div className="flex items-center gap-2 mb-3">
-                    <h3 className="font-semibold text-yuki-ink">
+                    <h3 className="font-fredoka font-semibold text-lg text-ink">
                       {group.nombre}
                     </h3>
                     {group.requerido && (
-                      <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">
+                      <span className="text-xs font-poppins font-medium text-nano bg-cobalt px-2 py-0.5 rounded-full">
                         Requerido
-                      </span>
-                    )}
-                    {group.max_select > 1 && (
-                      <span className="text-xs text-yuki-muted">
-                        (Selecciona hasta {group.max_select})
                       </span>
                     )}
                   </div>
                   
                   <div className="space-y-2">
-                    {group.modifiers.map(modifier => {
-                      const isSelected = isModifierSelected(group.id, modifier.id);
-                      const isSingleSelect = group.max_select === 1;
-                      const extraPrice = parseFloat(modifier.precio_extra);
+                    {group.modifiers?.map((modifier) => {
+                      const isSelected = (selectedModifiers[group.id] || []).some(
+                        (m) => m.id === modifier.id
+                      );
                       
                       return (
                         <button
                           key={modifier.id}
-                          onClick={() => handleModifierChange(group, modifier, isSingleSelect)}
-                          className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
+                          onClick={() => toggleModifier(group.id, modifier, group.max_select)}
+                          className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all duration-150 touch-target ${
                             isSelected
-                              ? 'border-yuki-purple bg-yuki-purple-light text-yuki-purple'
-                              : 'border-gray-200 bg-white text-yuki-ink hover:border-yuki-purple/50'
+                              ? 'bg-cobalt/10 border-cobalt'
+                              : 'bg-nano border-ink/20 active:scale-[0.98]'
                           }`}
                         >
                           <div className="flex items-center gap-3">
-                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                              isSelected
-                                ? 'border-yuki-purple bg-yuki-purple'
-                                : 'border-gray-300'
-                            }`}>
-                              {isSelected && <Check className="w-4 h-4 text-white" />}
+                            <div
+                              className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                                isSelected
+                                  ? 'bg-cobalt border-cobalt'
+                                  : 'border-ink/30'
+                              }`}
+                            >
+                              {isSelected && (
+                                <Check size={14} weight="bold" className="text-nano" />
+                              )}
                             </div>
-                            <span className="font-medium">{modifier.nombre}</span>
+                            <span className="font-poppins font-medium text-ink">
+                              {modifier.nombre}
+                            </span>
                           </div>
-                          {extraPrice > 0 && (
-                            <span className="text-sm text-yuki-muted">
-                              +${extraPrice.toFixed(2)}
+                          
+                          {parseFloat(modifier.precio_extra) > 0 && (
+                            <span className="font-poppins font-semibold text-cobalt">
+                              +${parseFloat(modifier.precio_extra).toFixed(2)}
                             </span>
                           )}
                         </button>
@@ -192,53 +172,65 @@ function ProductModal({ product, isOpen, onClose }) {
                   </div>
                 </div>
               ))}
+              
+              <div>
+                <h3 className="font-fredoka font-semibold text-lg text-ink mb-3">
+                  Notas (opcional)
+                </h3>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Ej: Sin hielo, extra caliente..."
+                  className="w-full p-4 bg-nano rounded-2xl border-2 border-ink/20 font-poppins text-ink placeholder:text-ink/40 resize-none focus:outline-none focus:border-cobalt"
+                  rows={2}
+                />
+              </div>
             </div>
-          )}
-          
-          <div className="mt-6">
-            <label className="block text-sm font-medium text-yuki-ink mb-2">
-              Notas especiales
-            </label>
-            <textarea
-              value={notas}
-              onChange={(e) => setNotas(e.target.value)}
-              placeholder="Ej: Sin hielo, extra dulce..."
-              className="w-full p-4 border-2 border-gray-200 rounded-xl resize-none focus:border-yuki-purple focus:outline-none transition-colors"
-              rows={2}
-            />
           </div>
         </div>
         
-        <div className="p-6 border-t border-gray-100 bg-white">
+        <div className="sticky bottom-0 z-10 bg-paper/95 backdrop-blur-sm border-t-2 border-ink/10 p-4">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-yuki-muted">Total</span>
-            <span className="text-2xl font-bold text-yuki-purple">
-              ${total.toFixed(2)}
-            </span>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                className="w-12 h-12 rounded-full bg-nano border-2 border-ink shadow-doodle-sm flex items-center justify-center transition-all duration-150 active:scale-95 active:shadow-none"
+              >
+                <Minus size={20} weight="bold" />
+              </button>
+              <span className="font-fredoka font-bold text-2xl text-ink w-8 text-center">
+                {quantity}
+              </span>
+              <button
+                onClick={() => setQuantity(quantity + 1)}
+                className="w-12 h-12 rounded-full bg-nano border-2 border-ink shadow-doodle-sm flex items-center justify-center transition-all duration-150 active:scale-95 active:shadow-none"
+              >
+                <Plus size={20} weight="bold" />
+              </button>
+            </div>
+            
+            <div className="text-right">
+              <p className="font-fredoka font-bold text-3xl text-cobalt">
+                ${totalPrice.toFixed(2)}
+              </p>
+            </div>
           </div>
           
           <button
-            onClick={handleAddToCart}
-            disabled={!canAdd || isAdding}
-            className={`w-full py-4 rounded-full font-semibold text-lg flex items-center justify-center gap-2 transition-all ${
-              canAdd && !isAdding
-                ? 'bg-yuki-purple text-white hover:bg-yuki-purple-dark shadow-lg hover:shadow-xl'
-                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            onClick={handleAdd}
+            disabled={!isValid}
+            className={`w-full py-4 rounded-2xl font-fredoka font-bold text-xl transition-all duration-150 touch-target ${
+              isValid
+                ? 'bg-cobalt text-nano border-2 border-ink shadow-doodle active:scale-95 active:shadow-none'
+                : 'bg-ink/20 text-ink/40 cursor-not-allowed'
             }`}
           >
-            {isAdding ? (
-              <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <>
-                <Plus className="w-6 h-6" />
-                Agregar al carrito
-              </>
-            )}
+            {!isValid ? 'Completa las opciones requeridas' : 'Agregar al carrito'}
           </button>
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default ProductModal;

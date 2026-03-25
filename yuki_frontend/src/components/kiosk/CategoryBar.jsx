@@ -1,48 +1,50 @@
-import { Leaf, Coffee, CupSoda, Cookie } from 'lucide-react';
+import { useRef, useEffect } from 'react';
 
-const iconMap = {
-  leaf: Leaf,
-  coffee: Coffee,
-  'cup-soda': CupSoda,
-  cookie: Cookie
-};
+const CategoryBar = ({ categories, selectedCategory, onSelectCategory }) => {
+  const scrollRef = useRef(null);
 
-function CategoryBar({ categories, selectedCategory, onSelectCategory }) {
+  useEffect(() => {
+    if (scrollRef.current && selectedCategory) {
+      const button = scrollRef.current.querySelector(`[data-id="${selectedCategory}"]`);
+      if (button) {
+        button.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+    }
+  }, [selectedCategory]);
+
   return (
-    <div className="bg-white rounded-2xl p-2 shadow-sm overflow-x-auto">
-      <div className="flex gap-2 min-w-max">
+    <nav 
+      ref={scrollRef}
+      className="flex gap-3 px-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide py-4 bg-paper sticky top-[72px] z-30 border-b border-ink/10"
+    >
+      <button
+        onClick={() => onSelectCategory(null)}
+        data-id="all"
+        className={`flex-shrink-0 px-6 py-3 rounded-full border-2 font-fredoka font-semibold text-lg transition-all duration-150 touch-target snap-center ${
+          selectedCategory === null
+            ? 'bg-cobalt text-nano border-ink shadow-doodle-sm'
+            : 'bg-nano text-ink border-ink/30 active:scale-95'
+        }`}
+      >
+        Todo
+      </button>
+      
+      {categories.map((category) => (
         <button
-          onClick={() => onSelectCategory(null)}
-          className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium transition-all whitespace-nowrap ${
-            selectedCategory === null
-              ? 'bg-yuki-purple text-white shadow-md'
-              : 'bg-yuki-surface text-yuki-ink hover:bg-yuki-purple-light'
+          key={category.id}
+          onClick={() => onSelectCategory(category.id)}
+          data-id={category.id}
+          className={`flex-shrink-0 px-6 py-3 rounded-full border-2 font-fredoka font-semibold text-lg transition-all duration-150 touch-target snap-center ${
+            selectedCategory === category.id
+              ? 'bg-cobalt text-nano border-ink shadow-doodle-sm'
+              : 'bg-nano text-ink border-ink/30 active:scale-95'
           }`}
         >
-          <span className="text-lg">✨</span>
-          Todos
+          {category.nombre}
         </button>
-        
-        {categories.map((category) => {
-          const IconComponent = iconMap[category.icono] || Coffee;
-          return (
-            <button
-              key={category.id}
-              onClick={() => onSelectCategory(category.id)}
-              className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium transition-all whitespace-nowrap ${
-                selectedCategory === category.id
-                  ? 'bg-yuki-purple text-white shadow-md'
-                  : 'bg-yuki-surface text-yuki-ink hover:bg-yuki-purple-light'
-              }`}
-            >
-              <IconComponent className="w-5 h-5" />
-              {category.nombre}
-            </button>
-          );
-        })}
-      </div>
-    </div>
+      ))}
+    </nav>
   );
-}
+};
 
 export default CategoryBar;

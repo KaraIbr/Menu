@@ -1,56 +1,77 @@
-import { Coffee } from 'lucide-react';
-import { getMediaUrl } from '../../api/axios';
+import { ShoppingCart } from '@phosphor-icons/react';
+import { getFullImageUrl } from '../../api/menu';
 
-function ProductCard({ product, onClick }) {
-  const imageUrl = getMediaUrl(product.imagen);
-  const precio = parseFloat(product.precio_base).toFixed(2);
-  
+const ProductCard = ({ product, onClick }) => {
+  const imageUrl = getFullImageUrl(product.imagen);
+  const isAvailable = product.disponible && product.activo;
+
   return (
     <button
-      onClick={() => onClick(product)}
-      disabled={!product.disponible}
-      className={`bg-white rounded-2xl shadow-md overflow-hidden text-left transition-all w-full ${
-        product.disponible 
-          ? 'hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] cursor-pointer' 
-          : 'opacity-50 cursor-not-allowed'
+      onClick={() => isAvailable && onClick(product)}
+      disabled={!isAvailable}
+      className={`card text-left transition-all duration-150 ${
+        isAvailable ? 'active:scale-[0.98] cursor-pointer' : 'opacity-50 cursor-not-allowed'
       }`}
     >
-      <div className="aspect-square bg-yuki-surface relative overflow-hidden">
+      <div className="relative h-40 w-full rounded-2xl overflow-hidden bg-paper mb-3">
         {imageUrl ? (
-          <img 
-            src={imageUrl} 
+          <img
+            src={imageUrl}
             alt={product.nombre}
             className="w-full h-full object-cover"
+            loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-yuki-purple-light to-yuki-teal-light">
-            <Coffee className="w-16 h-16 text-yuki-purple opacity-50" />
+          <div className="w-full h-full flex items-center justify-center">
+            <ShoppingCart size={48} weight="duotone" className="text-ink/20" />
           </div>
         )}
-        {!product.disponible && (
-          <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-            <span className="bg-yuki-ink text-white px-3 py-1 rounded-full text-xs font-medium">
+        {!isAvailable && (
+          <div className="absolute inset-0 bg-ink/40 flex items-center justify-center">
+            <span className="bg-nano px-3 py-1 rounded-full font-fredoka font-semibold text-sm">
               Agotado
             </span>
           </div>
         )}
       </div>
       
-      <div className="p-4">
-        <h3 className="font-semibold text-yuki-ink text-base leading-tight mb-1">
-          {product.nombre}
-        </h3>
-        {product.descripcion && (
-          <p className="text-yuki-muted text-xs leading-relaxed mb-3 line-clamp-2">
-            {product.descripcion}
-          </p>
-        )}
-        <p className="text-yuki-purple font-bold text-lg">
-          ${precio}
+      <h3 className="font-fredoka font-semibold text-lg text-ink mb-1 line-clamp-2">
+        {product.nombre}
+      </h3>
+      
+      {product.descripcion && (
+        <p className="font-poppins text-sm text-ink/60 mb-2 line-clamp-2">
+          {product.descripcion}
         </p>
-      </div>
+      )}
+      
+      <p className="font-fredoka font-bold text-xl text-cobalt">
+        ${parseFloat(product.precio_base).toFixed(2)}
+      </p>
     </button>
   );
-}
+};
 
-export default ProductCard;
+const ProductGrid = ({ products, onProductClick }) => {
+  if (!products || products.length === 0) {
+    return (
+      <div className="p-8 text-center">
+        <p className="font-poppins text-ink/60">No hay productos disponibles</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+      {products.map((product) => (
+        <ProductCard
+          key={product.id}
+          product={product}
+          onClick={onProductClick}
+        />
+      ))}
+    </div>
+  );
+};
+
+export { ProductCard, ProductGrid };

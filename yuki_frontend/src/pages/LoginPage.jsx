@@ -1,129 +1,114 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { LogIn, Eye, EyeOff } from 'lucide-react';
-import { loginBarista } from '../api/orders';
+import { ArrowLeft, User, Lock, Eye, EyeSlash } from '@phosphor-icons/react';
 import useAuthStore from '../store/authStore';
+import toast from 'react-hot-toast';
 
-function LoginPage() {
+const LoginPage = () => {
   const navigate = useNavigate();
-  const { login } = useAuthStore();
+  const login = useAuthStore((state) => state.login);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  
-  const { register, handleSubmit, formState: { errors } } = useForm();
-  
-  const onSubmit = async (data) => {
-    setIsLoading(true);
-    setError('');
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
     
-    try {
-      const result = await loginBarista(data.email, data.password);
-      login(result.access);
+    if (!username || !password) {
+      toast.error('Completa todos los campos');
+      return;
+    }
+
+    setIsLoading(true);
+    const success = await login(username, password);
+    setIsLoading(false);
+
+    if (success) {
       navigate('/barista');
-    } catch (err) {
-      setError(err.message || 'Credenciales inválidas');
-    } finally {
-      setIsLoading(false);
+    } else {
+      toast.error('Credenciales incorrectas');
     }
   };
-  
+
   return (
-    <div className="min-h-screen bg-yuki-surface flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-yuki-purple rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-4xl">☕</span>
+    <div className="min-h-screen bg-paper flex flex-col">
+      <header className="p-4">
+        <button
+          onClick={() => navigate('/')}
+          className="w-12 h-12 rounded-full bg-nano border-2 border-ink shadow-doodle-sm flex items-center justify-center transition-all duration-150 active:scale-95 active:shadow-none"
+        >
+          <ArrowLeft size={24} weight="bold" />
+        </button>
+      </header>
+
+      <div className="flex-1 flex flex-col items-center justify-center p-6">
+        <div className="w-full max-w-sm">
+          <div className="text-center mb-8">
+            <h1 className="font-fredoka font-bold text-4xl text-cobalt mb-2">
+              Panel Barista
+            </h1>
+            <p className="font-poppins text-ink/60">
+              Ingresa tus credenciales para continuar
+            </p>
           </div>
-          <h1 className="text-3xl font-semibold text-yuki-ink">Panel Barista</h1>
-          <p className="text-yuki-muted mt-2">Ingresa tus credenciales</p>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="block font-fredoka font-semibold text-ink mb-2">
+                Usuario
+              </label>
+              <div className="relative">
+                <User size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/40" />
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Tu nombre de usuario"
+                  className="w-full pl-12 pr-4 py-4 bg-nano rounded-2xl border-2 border-ink/20 font-poppins text-ink placeholder:text-ink/40 focus:outline-none focus:border-cobalt"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block font-fredoka font-semibold text-ink mb-2">
+                Contraseña
+              </label>
+              <div className="relative">
+                <Lock size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/40" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Tu contraseña"
+                  className="w-full pl-12 pr-12 py-4 bg-nano rounded-2xl border-2 border-ink/20 font-poppins text-ink placeholder:text-ink/40 focus:outline-none focus:border-cobalt"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-ink/40"
+                >
+                  {showPassword ? <EyeSlash size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="btn-primary w-full mt-6"
+            >
+              {isLoading ? 'Iniciando sesión...' : 'Iniciar sesión'}
+            </button>
+          </form>
+
+          <p className="text-center font-poppins text-sm text-ink/40 mt-8">
+            Solo personal autorizado
+          </p>
         </div>
-        
-        <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-3xl shadow-lg p-8 space-y-6">
-          {error && (
-            <div className="bg-red-50 text-red-700 p-4 rounded-xl text-sm text-center">
-              {error}
-            </div>
-          )}
-          
-          <div>
-            <label className="block text-sm font-medium text-yuki-ink mb-2">
-              Correo electrónico
-            </label>
-            <input
-              type="email"
-              {...register('email', { 
-                required: 'El correo es requerido',
-                pattern: {
-                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: 'Correo inválido'
-                }
-              })}
-              placeholder="barista@yuki.com"
-              className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors ${
-                errors.email ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-yuki-purple'
-              }`}
-            />
-            {errors.email && (
-              <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
-            )}
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-yuki-ink mb-2">
-              Contraseña
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                {...register('password', { 
-                  required: 'La contraseña es requerida',
-                  minLength: {
-                    value: 4,
-                    message: 'Mínimo 4 caracteres'
-                  }
-                })}
-                placeholder="••••••••"
-                className={`w-full px-4 py-3 pr-12 border-2 rounded-xl focus:outline-none transition-colors ${
-                  errors.password ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-yuki-purple'
-                }`}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-yuki-muted hover:text-yuki-purple transition-colors"
-              >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
-            </div>
-            {errors.password && (
-              <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
-            )}
-          </div>
-          
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-4 bg-yuki-purple text-white rounded-full font-semibold text-lg hover:bg-yuki-purple-dark shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            {isLoading ? (
-              <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <>
-                <LogIn className="w-5 h-5" />
-                Iniciar sesión
-              </>
-            )}
-          </button>
-        </form>
-        
-        <p className="text-center text-yuki-muted text-xs mt-6">
-          Demo: barista@yuki.com / yuki123
-        </p>
       </div>
     </div>
   );
-}
+};
 
 export default LoginPage;
