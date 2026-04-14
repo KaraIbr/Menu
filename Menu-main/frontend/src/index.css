@@ -1,0 +1,180 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cobalt: #0725b0;
+  --color-cobalt-50: #e6e9f5;
+  --color-cobalt-100: #c0c8e7;
+  --color-cobalt-200: #96a4d9;
+  --color-cobalt-300: #6c80cb;
+  --color-cobalt-400: #4761bf;
+  --color-cobalt-500: #2248b3;
+  --color-cobalt-600: #1a3a8f;
+  --color-cobalt-700: #122b6b;
+  --color-cobalt-800: #0a1c47;
+  --color-cobalt-900: #020d23;
+  
+  --color-paper: #e5ded4;
+  --color-ink: #3e3a36;
+  --color-nano: #f2efea;
+  
+  --font-fredoka: 'Fredoka', sans-serif;
+  --font-poppins: 'Poppins', sans-serif;
+  
+  --shadow-doodle: 6px 6px 0px 0px #3e3a36;
+  --shadow-doodle-sm: 4px 4px 0px 0px #3e3a36;
+  
+  --animate-pulse-riso: pulse-riso 1.5s ease-in-out infinite;
+  
+  @keyframes pulse-riso {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.8; }
+  }
+}
+
+html {
+  font-family: 'Poppins', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  min-height: 100vh;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.font-fredoka {
+  font-family: var(--font-fredoka);
+}
+
+.font-poppins {
+  font-family: var(--font-poppins);
+}
+
+.bg-paper { background-color: var(--color-paper); }
+.bg-nano { background-color: var(--color-nano); }
+.bg-cobalt { background-color: var(--color-cobalt); }
+.bg-cobalt-5 { background-color: rgba(7, 37, 176, 0.05); }
+.bg-cobalt-10 { background-color: rgba(7, 37, 176, 0.1); }
+
+.text-ink { color: var(--color-ink); }
+.text-nano { color: var(--color-nano); }
+.text-cobalt { color: var(--color-cobalt); }
+.text-yellow-700 { color: #a16207; }
+.text-yellow-800 { color: #854d0e; }
+.text-blue-700 { color: #1d4ed8; }
+.text-blue-800 { color: #1e40af; }
+.text-green-700 { color: #15803d; }
+.text-green-800 { color: #166534; }
+.text-red-800 { color: #991b1b; }
+.text-gray-600 { color: #475569; }
+
+.bg-yellow-100 { background-color: #fef9c3; }
+.bg-yellow-500 { background-color: #eab308; }
+.bg-blue-100 { background-color: #dbeafe; }
+.bg-blue-500 { background-color: #3b82f6; }
+.bg-green-100 { background-color: #dcfce7; }
+.bg-green-500 { background-color: #22c55e; }
+.bg-gray-100 { background-color: #f3f4f6; }
+.bg-red-100 { background-color: #fee2e2; }
+
+.border-cobalt { border-color: var(--color-cobalt); }
+.border-ink { border-color: var(--color-ink); }
+.border-yellow-400 { border-color: #facc15; }
+.border-blue-400 { border-color: #60a5fa; }
+.border-green-400 { border-color: #4ade80; }
+.border-gray-400 { border-color: #94a3b8; }
+.border-red-400 { border-color: #f87171; }
+
+.shadow-doodle { box-shadow: var(--shadow-doodle); }
+.shadow-doodle-sm { box-shadow: var(--shadow-doodle-sm); }
+
+.animate-pulse-riso {
+  animation: var(--animate-pulse-riso);
+}
+
+.btn-primary {
+  background-color: var(--color-cobalt);
+  color: var(--color-nano);
+  font-family: var(--font-fredoka);
+  font-weight: 600;
+  font-size: 1.125rem;
+  padding: 1rem 2rem;
+  border-radius: 1.5rem;
+  border: 2px solid var(--color-ink);
+  box-shadow: var(--shadow-doodle);
+  transition: all 150ms;
+  min-height: 56px;
+}
+
+.btn-primary:active {
+  transform: scale(0.95);
+  box-shadow: none;
+}
+
+.btn-secondary {
+  background-color: var(--color-nano);
+  color: var(--color-ink);
+  font-family: var(--font-fredoka);
+  font-weight: 600;
+  font-size: 1.125rem;
+  padding: 1rem 2rem;
+  border-radius: 1.5rem;
+  border: 2px solid var(--color-ink);
+  box-shadow: var(--shadow-doodle);
+  transition: all 150ms;
+  min-height: 56px;
+}
+
+.btn-secondary:active {
+  transform: scale(0.95);
+  box-shadow: none;
+}
+
+.card {
+  background-color: var(--color-nano);
+  border-radius: 1.5rem;
+  border: 2px solid var(--color-ink);
+  box-shadow: var(--shadow-doodle);
+  padding: 1rem;
+}
+
+.skeleton {
+  background-color: var(--color-paper);
+  animation: var(--animate-pulse-riso);
+  border-radius: 0.75rem;
+}
+
+.touch-target {
+  min-width: 48px;
+  min-height: 48px;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.rounded-4xl {
+  border-radius: 2rem;
+}
+
+.rounded-3xl {
+  border-radius: 1.5rem;
+}
+
+.rounded-2xl {
+  border-radius: 1rem;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
