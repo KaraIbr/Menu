@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Product, ModifierGroup, Modifier, Order, OrderItem, OrderItemModifier
+from .models import Category, Product, ModifierGroup, Modifier, Order, OrderItem, OrderItemModifier, Personal
 
 
 class ModifierInline(admin.TabularInline):
@@ -67,3 +67,16 @@ class OrderItemAdmin(admin.ModelAdmin):
 @admin.register(OrderItemModifier)
 class OrderItemModifierAdmin(admin.ModelAdmin):
     list_display = ('order_item', 'nombre', 'precio_extra')
+
+
+@admin.register(Personal)
+class PersonalAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'username', 'rol', 'activo', 'created_at')
+    list_filter = ('rol', 'activo')
+    search_fields = ('nombre', 'username')
+    exclude = ('password',)
+    
+    def save_model(self, request, obj, form, change):
+        if 'password' in form.cleaned_data and form.cleaned_data['password']:
+            obj.set_password(form.cleaned_data['password'])
+        super().save_model(request, obj, form, change)

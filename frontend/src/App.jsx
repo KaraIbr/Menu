@@ -5,10 +5,18 @@ import HomePage from './pages/HomePage';
 import KioskPage from './pages/KioskPage';
 import LoginPage from './pages/LoginPage';
 import BaristaPage from './pages/BaristaPage';
+import AdminPanel from './pages/AdminPanel';
+import AdminLoginPage from './pages/AdminLoginPage';
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, allowedRoles }) => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
+  const user = useAuthStore((state) => state.user);
+  
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (allowedRoles && user && !allowedRoles.includes(user.rol)) {
+    return <Navigate to="/barista" replace />;
+  }
+  return children;
 };
 
 function App() {
@@ -18,6 +26,15 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/kiosk" element={<KioskPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allowedRoles={['barista', 'cocinero']}>
+              <AdminPanel />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/barista"
           element={

@@ -1,12 +1,13 @@
 import os
 from pathlib import Path
 from datetime import timedelta
+from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'replace-me-in-prod')
-DEBUG = os.getenv('DJANGO_DEBUG', 'True') == 'True'
-ALLOWED_HOSTS = [host for host in os.getenv('DJANGO_ALLOWED_HOSTS', '*').split(',') if host]
+SECRET_KEY = config('SECRET_KEY', default='replace-me-in-prod')
+DEBUG = config('DEBUG', default=True, cast=bool)
+ALLOWED_HOSTS = [host.strip() for host in config('ALLOWED_HOSTS', default='*').split(',') if host.strip()]
 APPEND_SLASH = False
 
 INSTALLED_APPS = [
@@ -55,8 +56,12 @@ WSGI_APPLICATION = 'yuki_backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST', default='localhost'),
+        'PORT': config('DB_PORT', default='5432'),
     }
 }
 

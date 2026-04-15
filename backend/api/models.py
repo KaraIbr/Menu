@@ -11,10 +11,15 @@ class TimeStampedModel(models.Model):
 
 
 class Category(TimeStampedModel):
+    class Tipo(models.TextChoices):
+        COMIDA = 'comida', 'Comida'
+        BEBIDA = 'bebida', 'Bebida'
+
     nombre = models.CharField(max_length=120)
     descripcion = models.TextField(blank=True, null=True)
     activo = models.BooleanField(default=True)
     orden = models.PositiveIntegerField(default=0)
+    tipo = models.CharField(max_length=20, choices=Tipo.choices, default=Tipo.COMIDA)
 
     class Meta:
         ordering = ('orden', 'nombre')
@@ -137,3 +142,29 @@ class OrderItemModifier(TimeStampedModel):
 
     def __str__(self):
         return f"{self.nombre} (+{self.precio_extra})"
+
+
+class Personal(TimeStampedModel):
+    class Rol(models.TextChoices):
+        BARISTA = 'barista', 'Barista'
+        COCINERO = 'cocinero', 'Cocinero'
+
+    nombre = models.CharField(max_length=120)
+    username = models.CharField(max_length=100, unique=True)
+    password = models.CharField(max_length=128)
+    rol = models.CharField(max_length=20, choices=Rol.choices)
+    activo = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ('nombre',)
+
+    def __str__(self):
+        return f"{self.nombre} ({self.get_rol_display()})"
+
+    def set_password(self, raw_password):
+        from django.contrib.auth.hashers import make_password
+        self.password = make_password(raw_password)
+
+    def check_password(self, raw_password):
+        from django.contrib.auth.hashers import check_password
+        return check_password(raw_password, self.password)

@@ -1,5 +1,7 @@
 import api from './axios';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+
 export const getMenu = async () => {
   const response = await api.get('/menu/');
   return response.data;
@@ -40,18 +42,74 @@ export const updateOrderStatus = async (id, estado) => {
   return response.data;
 };
 
-export const login = async (username, password) => {
-  const response = await api.post('/auth/token/', { username, password });
+export const personalLogin = async (username, password) => {
+  const response = await api.post('/auth/personal/login/', { username, password });
   return response.data;
 };
 
 export const refreshToken = async (refresh) => {
-  const response = await api.post('/auth/token/refresh/', { refresh });
-  return response.data;
+  return { access: 'token' };
 };
 
 export const getFullImageUrl = (relativePath) => {
   if (!relativePath) return null;
   if (relativePath.startsWith('http')) return relativePath;
-  return `http://192.168.59.150:8000${relativePath}`;
+  return `${API_URL.replace('/api', '')}${relativePath}`;
+};
+
+export const getPersonalList = async () => {
+  const response = await api.get('/admin/personal/');
+  return response.data;
+};
+
+export const createPersonal = async (data) => {
+  const response = await api.post('/admin/personal/', data);
+  return response.data;
+};
+
+export const updatePersonal = async (id, data) => {
+  const response = await api.patch(`/admin/personal/${id}/`, data);
+  return response.data;
+};
+
+export const deletePersonal = async (id) => {
+  await api.delete(`/admin/personal/${id}/`);
+};
+
+export const getCategoriesAdmin = async () => {
+  const response = await api.get('/admin/categories/');
+  return response.data;
+};
+
+export const createCategory = async (data) => {
+  const response = await api.post('/admin/categories/', data);
+  return response.data;
+};
+
+export const updateCategory = async (id, data) => {
+  const response = await api.patch(`/admin/categories/${id}/`, data);
+  return response.data;
+};
+
+export const deleteCategory = async (id) => {
+  await api.delete(`/admin/categories/${id}/`);
+};
+
+export const getProductsAdmin = async (params = {}) => {
+  const response = await api.get('/admin/products/', { params });
+  return response.data;
+};
+
+export const createProduct = async (data) => {
+  const response = await api.post('/admin/products/', data);
+  return response.data;
+};
+
+export const updateProduct = async (id, data) => {
+  const response = await api.patch(`/admin/products/${id}/`, data);
+  return response.data;
+};
+
+export const deleteProduct = async (id) => {
+  await api.delete(`/admin/products/${id}/`);
 };

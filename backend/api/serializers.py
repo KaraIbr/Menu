@@ -10,6 +10,7 @@ from .models import (
     Order,
     OrderItem,
     OrderItemModifier,
+    Personal,
 )
 
 
@@ -43,7 +44,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = ('id', 'nombre', 'descripcion', 'products')
+        fields = ('id', 'nombre', 'descripcion', 'tipo', 'products')
 
 
 class OrderItemModifierSerializer(serializers.ModelSerializer):
@@ -174,3 +175,40 @@ class OrderCreateSerializer(serializers.ModelSerializer):
             order.save()
 
         return order
+
+
+class PersonalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Personal
+        fields = ('id', 'nombre', 'username', 'rol', 'activo', 'created_at')
+        read_only_fields = ('id', 'created_at')
+
+
+class PersonalCreateSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, min_length=4)
+
+    class Meta:
+        model = Personal
+        fields = ('id', 'nombre', 'username', 'password', 'rol', 'activo')
+        read_only_fields = ('id',)
+
+    def create(self, validated_data):
+        password = validated_data.pop('password')
+        personal = Personal(**validated_data)
+        personal.set_password(password)
+        personal.save()
+        return personal
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop('password', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        if password:
+            instance.set_password(password)
+        instance.save()
+        return instance
+
+
+class PersonalLoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField()

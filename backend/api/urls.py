@@ -1,4 +1,5 @@
 from django.urls import path
+from rest_framework.routers import DefaultRouter
 
 from .views import (
     CategoryViewSet,
@@ -8,7 +9,20 @@ from .views import (
     OrderListAPIView,
     OrderDetailAPIView,
     OrderStatusUpdateAPIView,
+    PersonalLoginView,
+    PersonalViewSet,
+    CategoryAdminViewSet,
+    ProductAdminViewSet,
+    ModifierGroupAdminViewSet,
+    ModifierAdminViewSet,
 )
+
+router = DefaultRouter()
+router.register(r'admin/personal', PersonalViewSet, basename='personal')
+router.register(r'admin/categories', CategoryAdminViewSet, basename='categories-admin')
+router.register(r'admin/products', ProductAdminViewSet, basename='products-admin')
+router.register(r'admin/modifier-groups', ModifierGroupAdminViewSet, basename='modifier-groups-admin')
+router.register(r'admin/modifiers', ModifierAdminViewSet, basename='modifiers-admin')
 
 urlpatterns = [
     path('menu/', MenuView.as_view(), name='menu'),
@@ -21,4 +35,6 @@ urlpatterns = [
     path('orders/list/', OrderListAPIView.as_view(), name='orders-list-slash'),
     path('orders/<int:pk>/', OrderDetailAPIView.as_view(), name='orders-detail'),
     path('orders/<int:pk>/estado/', OrderStatusUpdateAPIView.as_view(), name='orders-status'),
-]
+
+    path('auth/personal/login/', PersonalLoginView.as_view(), name='personal-login'),
+] + router.urls

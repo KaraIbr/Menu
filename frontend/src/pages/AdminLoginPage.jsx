@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Lock, Eye, EyeSlash } from '@phosphor-icons/react';
+import { ArrowLeft, User, Lock, Eye, EyeSlash, ShieldCheck } from '@phosphor-icons/react';
 import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
 
-const LoginPage = () => {
+const AdminLoginPage = () => {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
   const [username, setUsername] = useState('');
@@ -25,11 +25,7 @@ const LoginPage = () => {
     setIsLoading(false);
 
     if (user) {
-      if (user.rol === 'barista') {
-        navigate('/barista');
-      } else if (user.rol === 'cocinero') {
-        navigate('/barista');
-      }
+      navigate('/admin');
     } else {
       toast.error('Credenciales incorrectas');
     }
@@ -49,11 +45,14 @@ const LoginPage = () => {
       <div className="flex-1 flex flex-col items-center justify-center p-6">
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
+            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-cobalt/10 flex items-center justify-center">
+              <ShieldCheck size={48} weight="fill" className="text-cobalt" />
+            </div>
             <h1 className="font-fredoka font-bold text-4xl text-cobalt mb-2">
-              Panel Barista
+              Panel Admin
             </h1>
             <p className="font-poppins text-ink/60">
-              Ingresa tus credenciales para continuar
+              Gestiona personal y productos
             </p>
           </div>
 
@@ -68,7 +67,7 @@ const LoginPage = () => {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Tu nombre de usuario"
+                  placeholder="Nombre de usuario"
                   className="w-full pl-12 pr-4 py-4 bg-nano rounded-2xl border-2 border-ink/20 font-poppins text-ink placeholder:text-ink/40 focus:outline-none focus:border-cobalt"
                 />
               </div>
@@ -84,7 +83,7 @@ const LoginPage = () => {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Tu contraseña"
+                  placeholder="Contraseña"
                   className="w-full pl-12 pr-12 py-4 bg-nano rounded-2xl border-2 border-ink/20 font-poppins text-ink placeholder:text-ink/40 focus:outline-none focus:border-cobalt"
                 />
                 <button
@@ -102,17 +101,20 @@ const LoginPage = () => {
               disabled={isLoading}
               className="btn-primary w-full mt-6"
             >
-              {isLoading ? 'Iniciando sesión...' : 'Iniciar sesión'}
+              {isLoading ? 'Ingresando...' : 'Ingresar al Panel'}
             </button>
           </form>
 
-          <p className="text-center font-poppins text-sm text-ink/40 mt-8">
-            Solo personal autorizado
-          </p>
+          <button
+            onClick={() => navigate('/login')}
+            className="w-full mt-4 py-3 font-poppins text-sm text-ink/60 hover:text-cobalt transition-colors"
+          >
+            Ir a panel de pedidos
+          </button>
         </div>
       </div>
     </div>
   );
 };
 
-export default LoginPage;
+export default AdminLoginPage;

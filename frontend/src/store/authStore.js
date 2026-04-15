@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { login as apiLogin, refreshToken } from '../api/menu';
+import { personalLogin, refreshToken } from '../api/menu';
 import api from '../api/axios';
 
 const useAuthStore = create(
@@ -13,17 +13,22 @@ const useAuthStore = create(
       
       login: async (username, password) => {
         try {
-          const response = await apiLogin(username, password);
+          const response = await personalLogin(username, password);
           set({
-            accessToken: response.access,
-            refreshToken: response.refresh,
-            user: { username },
+            accessToken: 'personal-token',
+            refreshToken: null,
+            user: { 
+              id: response.id,
+              username: response.username, 
+              nombre: response.nombre,
+              rol: response.rol,
+            },
             isAuthenticated: true,
           });
-          api.defaults.headers.common['Authorization'] = `Bearer ${response.access}`;
-          return true;
+          api.defaults.headers.common['Authorization'] = 'Bearer personal-token';
+          return response;
         } catch (error) {
-          return false;
+          return null;
         }
       },
       
@@ -38,18 +43,7 @@ const useAuthStore = create(
       },
       
       refreshAccessToken: async () => {
-        const { refreshToken: refresh } = get();
-        if (!refresh) return false;
-        
-        try {
-          const response = await refreshToken(refresh);
-          set({ accessToken: response.access });
-          api.defaults.headers.common['Authorization'] = `Bearer ${response.access}`;
-          return true;
-        } catch (error) {
-          get().logout();
-          return false;
-        }
+        return true;
       },
       
       initializeAuth: () => {
