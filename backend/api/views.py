@@ -163,6 +163,14 @@ class OrderStatusUpdateAPIView(generics.UpdateAPIView):
         return Response(serializer.data)
 
 
+class TestAuthView(APIView):
+    authentication_classes = [NoAuthAuthentication]
+    permission_classes = [AllowAny]
+    
+    def get(self, request):
+        return Response({'status': 'ok', 'authenticated': request.user is not None})
+
+
 class PersonalLoginView(APIView):
     permission_classes = [AllowAny]
 

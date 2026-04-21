@@ -9,6 +9,7 @@ from .views import (
     OrderListAPIView,
     OrderDetailAPIView,
     OrderStatusUpdateAPIView,
+    TestAuthView,
     PersonalLoginView,
     PersonalViewSet,
     CategoryAdminViewSet,
@@ -25,6 +26,7 @@ router.register(r'admin/modifier-groups', ModifierGroupAdminViewSet, basename='m
 router.register(r'admin/modifiers', ModifierAdminViewSet, basename='modifiers-admin')
 
 urlpatterns = [
+    path('test-auth/', TestAuthView.as_view(), name='test-auth'),
     path('menu/', MenuView.as_view(), name='menu'),
     path('menu/categories/', CategoryViewSet.as_view({'get': 'list'}), name='menu-categories'),
     path('menu/products/', ProductViewSet.as_view({'get': 'list'}), name='menu-products'),
