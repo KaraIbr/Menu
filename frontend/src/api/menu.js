@@ -1,6 +1,6 @@
-import api from './axios';
+import api, { setTokens } from './axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const API_URL = 'https://menu-ojc3.onrender.com/api';
 
 export const getMenu = async () => {
   const response = await api.get('/menu/');
@@ -44,17 +44,21 @@ export const updateOrderStatus = async (id, estado) => {
 
 export const personalLogin = async (username, password) => {
   const response = await api.post('/auth/personal/login/', { username, password });
+  if (response.data.access && response.data.refresh) {
+    setTokens(response.data.access, response.data.refresh, username, password);
+  }
   return response.data;
 };
 
 export const refreshToken = async (refresh) => {
-  return { access: 'token' };
+  const response = await api.post('/auth/personal/login/', { username: '', password: '' });
+  return response.data;
 };
 
 export const getFullImageUrl = (relativePath) => {
   if (!relativePath) return null;
   if (relativePath.startsWith('http')) return relativePath;
-  return `${API_URL.replace('/api', '')}${relativePath}`;
+  return `https://menu-ojc3.onrender.com${relativePath}`;
 };
 
 export const getPersonalList = async () => {
