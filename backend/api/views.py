@@ -1,8 +1,16 @@
 from django.db.models import Prefetch
 from rest_framework import viewsets, generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.authentication import BaseAuthentication
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+
+class NoAuthAuthentication(BaseAuthentication):
+    def authenticate(self, request):
+        return (None, None)
+    def authenticate_header(self, request):
+        return None
 
 from .models import Category, Product, ModifierGroup, Modifier, Order, OrderItem, Personal
 from .serializers import (
@@ -87,7 +95,7 @@ class OrderCreateAPIView(generics.CreateAPIView):
 
 class OrderListAPIView(generics.ListAPIView):
     serializer_class = OrderSerializer
-    authentication_classes = []
+    authentication_classes = [NoAuthAuthentication]
     permission_classes = [AllowAny]
     http_method_names = ['get']
 
@@ -106,7 +114,7 @@ class OrderListAPIView(generics.ListAPIView):
 
 class OrderDetailAPIView(generics.RetrieveAPIView):
     serializer_class = OrderSerializer
-    authentication_classes = []
+    authentication_classes = [NoAuthAuthentication]
     permission_classes = [AllowAny]
     queryset = Order.objects.prefetch_related(
         Prefetch(
@@ -119,7 +127,7 @@ class OrderDetailAPIView(generics.RetrieveAPIView):
 
 class OrderStatusUpdateAPIView(generics.UpdateAPIView):
     serializer_class = OrderSerializer
-    authentication_classes = []
+    authentication_classes = [NoAuthAuthentication]
     permission_classes = [AllowAny]
     queryset = Order.objects.all()
     http_method_names = ['patch']
@@ -180,7 +188,7 @@ class PersonalLoginView(APIView):
 
 class PersonalViewSet(viewsets.ModelViewSet):
     queryset = Personal.objects.all()
-    authentication_classes = []
+    authentication_classes = [NoAuthAuthentication]
     permission_classes = [AllowAny]
 
     def get_serializer_class(self):
@@ -192,7 +200,7 @@ class PersonalViewSet(viewsets.ModelViewSet):
 class CategoryAdminViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    authentication_classes = []
+    authentication_classes = [NoAuthAuthentication]
     permission_classes = [AllowAny]
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
 
@@ -203,7 +211,7 @@ class CategoryAdminViewSet(viewsets.ModelViewSet):
 class ProductAdminViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    authentication_classes = []
+    authentication_classes = [NoAuthAuthentication]
     permission_classes = [AllowAny]
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
 
@@ -230,13 +238,13 @@ class ProductAdminViewSet(viewsets.ModelViewSet):
 
 class ModifierGroupAdminViewSet(viewsets.ModelViewSet):
     queryset = ModifierGroup.objects.all()
-    authentication_classes = []
+    authentication_classes = [NoAuthAuthentication]
     permission_classes = [AllowAny]
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
 
 
 class ModifierAdminViewSet(viewsets.ModelViewSet):
     queryset = Modifier.objects.all()
-    authentication_classes = []
+    authentication_classes = [NoAuthAuthentication]
     permission_classes = [AllowAny]
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
