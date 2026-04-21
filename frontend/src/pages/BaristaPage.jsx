@@ -10,6 +10,7 @@ const BaristaPage = () => {
   const navigate = useNavigate();
   const { orders, loading, error, refetch, updateOrderInList } = useOrders();
   const logout = useAuthStore((state) => state.logout);
+  const user = useAuthStore((state) => state.user);
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
@@ -47,9 +48,16 @@ const BaristaPage = () => {
             >
               <ArrowLeft size={24} weight="bold" />
             </button>
-            <h1 className="font-fredoka font-bold text-2xl text-cobalt">
-              Panel Barista
-            </h1>
+            <div>
+              <h1 className="font-fredoka font-bold text-2xl text-cobalt">
+                Panel de Pedidos
+              </h1>
+              {user?.nombre && (
+                <p className="font-poppins text-sm text-ink/60">
+                  Bienvenido, <span className="font-semibold text-cobalt">{user.nombre}</span>
+                </p>
+              )}
+            </div>
           </div>
           
           <div className="flex items-center gap-3">
