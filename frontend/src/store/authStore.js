@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { personalLogin, refreshToken } from '../api/menu';
+import { personalLogin } from '../api/menu';
 import api from '../api/axios';
 
 const useAuthStore = create(
@@ -8,44 +8,33 @@ const useAuthStore = create(
     (set, get) => ({
       user: null,
       accessToken: null,
-      refreshToken: null,
       isAuthenticated: false,
-      
+
       login: async (username, password) => {
         try {
           const response = await personalLogin(username, password);
+          const { access, id, nombre, username: uname, rol } = response;
           set({
-            accessToken: 'personal-token',
-            refreshToken: null,
-            user: { 
-              id: response.id,
-              username: response.username, 
-              nombre: response.nombre,
-              rol: response.rol,
-            },
+            accessToken: access,
+            user: { id, username: uname, nombre, rol },
             isAuthenticated: true,
           });
-          api.defaults.headers.common['Authorization'] = 'Bearer personal-token';
+          api.defaults.headers.common['Authorization'] = `Bearer ${access}`;
           return response;
         } catch (error) {
           return null;
         }
       },
-      
+
       logout: () => {
         set({
           user: null,
           accessToken: null,
-          refreshToken: null,
           isAuthenticated: false,
         });
         delete api.defaults.headers.common['Authorization'];
       },
-      
-      refreshAccessToken: async () => {
-        return true;
-      },
-      
+
       initializeAuth: () => {
         const { accessToken } = get();
         if (accessToken) {

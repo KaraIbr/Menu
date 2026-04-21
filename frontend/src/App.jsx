@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import useAuthStore from './store/authStore';
@@ -11,15 +12,21 @@ import AdminLoginPage from './pages/AdminLoginPage';
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const user = useAuthStore((state) => state.user);
-  
+
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (allowedRoles && user && !allowedRoles.includes(user.rol)) {
-    return <Navigate to="/barista" replace />;
+    return <Navigate to={user.rol === 'admin' ? '/admin' : '/barista'} replace />;
   }
   return children;
 };
 
 function App() {
+  const initializeAuth = useAuthStore((state) => state.initializeAuth);
+
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
+
   return (
     <BrowserRouter>
       <Routes>
@@ -30,7 +37,7 @@ function App() {
         <Route
           path="/admin"
           element={
-            <ProtectedRoute allowedRoles={['barista', 'cocinero']}>
+            <ProtectedRoute allowedRoles={['admin']}>
               <AdminPanel />
             </ProtectedRoute>
           }

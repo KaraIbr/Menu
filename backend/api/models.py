@@ -148,6 +148,7 @@ class Personal(TimeStampedModel):
     class Rol(models.TextChoices):
         BARISTA = 'barista', 'Barista'
         COCINERO = 'cocinero', 'Cocinero'
+        ADMIN = 'admin', 'Admin'
 
     nombre = models.CharField(max_length=120)
     username = models.CharField(max_length=100, unique=True)

@@ -38,7 +38,7 @@ const HomePage = () => {
           </div>
           <div className="text-center">
             <h2 className="font-fredoka font-semibold text-2xl text-ink mb-1">
-              Soy Barista
+              Soy Sucursal
             </h2>
             <p className="font-poppins text-ink/60 text-sm">
               Ver pedidos
