@@ -87,7 +87,7 @@ class OrderCreateAPIView(generics.CreateAPIView):
 
 class OrderListAPIView(generics.ListAPIView):
     serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     http_method_names = ['get']
 
     def get_queryset(self):
@@ -105,7 +105,7 @@ class OrderListAPIView(generics.ListAPIView):
 
 class OrderDetailAPIView(generics.RetrieveAPIView):
     serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     queryset = Order.objects.prefetch_related(
         Prefetch(
             'items',
@@ -117,7 +117,7 @@ class OrderDetailAPIView(generics.RetrieveAPIView):
 
 class OrderStatusUpdateAPIView(generics.UpdateAPIView):
     serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     queryset = Order.objects.all()
     http_method_names = ['patch']
 
@@ -177,7 +177,7 @@ class PersonalLoginView(APIView):
 
 class PersonalViewSet(viewsets.ModelViewSet):
     queryset = Personal.objects.all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
@@ -188,7 +188,7 @@ class PersonalViewSet(viewsets.ModelViewSet):
 class CategoryAdminViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
 
     def get_queryset(self):
@@ -198,7 +198,7 @@ class CategoryAdminViewSet(viewsets.ModelViewSet):
 class ProductAdminViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
 
     def get_queryset(self):
@@ -224,11 +224,11 @@ class ProductAdminViewSet(viewsets.ModelViewSet):
 
 class ModifierGroupAdminViewSet(viewsets.ModelViewSet):
     queryset = ModifierGroup.objects.all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
 
 
 class ModifierAdminViewSet(viewsets.ModelViewSet):
     queryset = Modifier.objects.all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']

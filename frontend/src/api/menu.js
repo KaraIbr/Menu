@@ -1,4 +1,4 @@
-import api, { setTokens } from './axios';
+import api from './axios';
 
 const API_URL = 'https://menu-ojc3.onrender.com/api';
 
@@ -44,14 +44,6 @@ export const updateOrderStatus = async (id, estado) => {
 
 export const personalLogin = async (username, password) => {
   const response = await api.post('/auth/personal/login/', { username, password });
-  if (response.data.access && response.data.refresh) {
-    setTokens(response.data.access, response.data.refresh, username, password);
-  }
-  return response.data;
-};
-
-export const refreshToken = async (refresh) => {
-  const response = await api.post('/auth/personal/login/', { username: '', password: '' });
   return response.data;
 };
 

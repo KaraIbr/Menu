@@ -25,7 +25,9 @@ const LoginPage = () => {
     setIsLoading(false);
 
     if (user) {
-      if (user.rol === 'barista') {
+      if (user.rol === 'admin') {
+        navigate('/admin');
+      } else if (user.rol === 'barista') {
         navigate('/barista');
       } else if (user.rol === 'cocinero') {
         navigate('/barista');
