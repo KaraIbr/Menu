@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-from datetime import timedelta
 from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,7 +22,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'rest_framework_simplejwt',
     'corsheaders',
     'api.apps.ApiConfig',
 ]
@@ -100,13 +98,7 @@ REST_FRAMEWORK = {
     'UNAUTHENTICATED_USER': None,
 }
 
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=120),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    'AUTH_HEADER_TYPES': ('Bearer',),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
-}
+
 
 CORS_ALLOWED_ORIGINS = [
     'https://menu-nu-steel.vercel.app',
