@@ -171,9 +171,11 @@ const PersonalSection = () => {
                 <td className="py-3 px-4 font-poppins text-ink/70">{p.username}</td>
                 <td className="py-3 px-4">
                   <span className={`px-3 py-1 rounded-full text-sm font-poppins font-semibold ${
-                    p.rol === 'barista' ? 'bg-coffee/20 text-coffee' : 'bg-coral/20 text-coral'
+                    p.rol === 'barista' ? 'bg-coffee/20 text-coffee' :
+                    p.rol === 'cocinero' ? 'bg-coral/20 text-coral' :
+                    'bg-cobalt/20 text-cobalt'
                   }`}>
-                    {p.rol === 'barista' ? 'Barista' : 'Cocinero'}
+                    {p.rol === 'barista' ? 'Barista' : p.rol === 'cocinero' ? 'Cocinero' : 'Admin'}
                   </span>
                 </td>
                 <td className="py-3 px-4">
@@ -303,7 +305,7 @@ const PersonalModal = ({ personal, onClose, onSave }) => {
 
           <div>
             <label className="block font-poppins text-sm text-ink/70 mb-2">Rol</label>
-            <div className="flex gap-4">
+            <div className="flex gap-2 flex-wrap">
               <button
                 type="button"
                 onClick={() => setForm({ ...form, rol: 'barista' })}
@@ -327,6 +329,18 @@ const PersonalModal = ({ personal, onClose, onSave }) => {
               >
                 <ForkKnife size={20} className="inline mr-2" />
                 Cocinero
+              </button>
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, rol: 'admin' })}
+                className={`flex-1 py-3 rounded-xl font-poppins font-semibold transition-all ${
+                  form.rol === 'admin'
+                    ? 'bg-cobalt text-nano'
+                    : 'bg-ink/10 text-ink/70 hover:bg-ink/20'
+                }`}
+              >
+                <UserPlus size={20} className="inline mr-2" />
+                Admin
               </button>
             </div>
           </div>

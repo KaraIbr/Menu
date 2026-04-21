@@ -2,22 +2,40 @@ from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
-from api.models import Category, Product, ModifierGroup, Modifier
+from api.models import Category, Product, ModifierGroup, Modifier, Personal
 
 
 class Command(BaseCommand):
-    help = 'Crea datos de ejemplo para el menu y usuario barista.'
+    help = 'Crea datos de ejemplo para el menu y usuarios de demostración.'
 
     def handle(self, *args, **options):
         User = get_user_model()
 
-        barista, created = User.objects.get_or_create(username='barista', defaults={'is_staff': True})
+        barista_user, created = User.objects.get_or_create(username='barista', defaults={'is_staff': True})
         if created:
-            barista.set_password('Barista123!')
-            barista.save()
-            self.stdout.write(self.style.SUCCESS('Usuario barista creado (Barista123!)'))
+            barista_user.set_password('Barista123!')
+            barista_user.save()
+            self.stdout.write(self.style.SUCCESS('Usuario Django barista creado (Barista123!)'))
         else:
-            self.stdout.write('Usuario barista ya existe')
+            self.stdout.write('Usuario Django barista ya existe')
+
+        # Personal admin for frontend panel
+        if not Personal.objects.filter(username='admin').exists():
+            admin_personal = Personal(nombre='Admin', username='admin', rol='admin', activo=True)
+            admin_personal.set_password('Admin123!')
+            admin_personal.save()
+            self.stdout.write(self.style.SUCCESS('Personal admin creado (username: admin / password: Admin123!)'))
+        else:
+            self.stdout.write('Personal admin ya existe')
+
+        # Personal barista for frontend panel
+        if not Personal.objects.filter(username='barista').exists():
+            barista_personal = Personal(nombre='Barista Demo', username='barista', rol='barista', activo=True)
+            barista_personal.set_password('Barista123!')
+            barista_personal.save()
+            self.stdout.write(self.style.SUCCESS('Personal barista creado (username: barista / password: Barista123!)'))
+        else:
+            self.stdout.write('Personal barista ya existe')
 
         bebidas, _ = Category.objects.get_or_create(nombre='Bebidas calientes', defaults={'orden': 1})
         frios, _ = Category.objects.get_or_create(nombre='Bebidas frias', defaults={'orden': 2})

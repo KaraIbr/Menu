@@ -25,7 +25,11 @@ const AdminLoginPage = () => {
     setIsLoading(false);
 
     if (user) {
-      navigate('/admin');
+      if (user.rol === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/barista');
+      }
     } else {
       toast.error('Credenciales incorrectas');
     }
