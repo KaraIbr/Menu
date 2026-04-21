@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+
 const STATUS_CONFIG = {
   pendiente: {
     label: 'Pendiente',
@@ -37,11 +39,22 @@ const PAYMENT_ICONS = {
   qr: '📱',
 };
 
+const getElapsedMinutes = (createdAt) =>
+  Math.floor((Date.now() - new Date(createdAt).getTime()) / 60000);
+
 const OrderCard = ({ order, onStatusChange }) => {
   const statusConfig = STATUS_CONFIG[order.estado] || STATUS_CONFIG.pendiente;
-  const createdAt = new Date(order.created_at);
-  const timeElapsed = Math.floor((Date.now() - createdAt.getTime()) / 60000);
-  
+
+  const [timeElapsed, setTimeElapsed] = useState(() => getElapsedMinutes(order.created_at));
+
+  // Update the timer every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeElapsed(getElapsedMinutes(order.created_at));
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [order.created_at]);
+
   const nextStatus = {
     pendiente: 'preparando',
     preparando: 'listo',
@@ -55,6 +68,14 @@ const OrderCard = ({ order, onStatusChange }) => {
     }
   };
 
+  // Visual urgency: yellow at 10 min, red at 20 min
+  const timerColor =
+    timeElapsed >= 20
+      ? 'text-red-600 font-semibold'
+      : timeElapsed >= 10
+      ? 'text-yellow-600 font-semibold'
+      : 'text-ink/60';
+
   return (
     <div className="card">
       <div className="flex items-start justify-between mb-4">
@@ -64,8 +85,8 @@ const OrderCard = ({ order, onStatusChange }) => {
           </span>
           <div className="flex items-center gap-2 mt-1">
             <span className="text-lg">{PAYMENT_ICONS[order.metodo_pago]}</span>
-            <span className="font-poppins text-sm text-ink/60">
-              hace {timeElapsed} min
+            <span className={`font-poppins text-sm ${timerColor}`}>
+              ⏱ {timeElapsed} min
             </span>
           </div>
         </div>
@@ -80,7 +101,7 @@ const OrderCard = ({ order, onStatusChange }) => {
             <div className="flex justify-between items-start">
               <div>
                 <span className="font-fredoka font-semibold text-ink">
-                  {item.cantidad}x {item.product?.nombre || 'Producto'}
+                  {item.cantidad}x {item.product?.nombre || item.product_name || 'Producto'}
                 </span>
                 {item.selected_modifiers?.length > 0 && (
                   <p className="font-poppins text-sm text-ink/60 mt-1">

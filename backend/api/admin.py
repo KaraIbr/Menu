@@ -1,5 +1,39 @@
+from django import forms
 from django.contrib import admin
 from .models import Category, Product, ModifierGroup, Modifier, Order, OrderItem, OrderItemModifier, Personal
+
+
+class PersonalAdminForm(forms.ModelForm):
+    """
+    Custom form that replaces the stored hashed-password field with a
+    plain-text input so the Django admin can set/reset passwords cleanly.
+    """
+    raw_password = forms.CharField(
+        label='Contraseña',
+        required=False,
+        widget=forms.PasswordInput(render_value=False),
+        help_text='Dejar vacío para conservar la contraseña actual. Obligatorio al crear.',
+    )
+
+    class Meta:
+        model = Personal
+        fields = ('nombre', 'username', 'raw_password', 'rol', 'activo')
+
+    def clean(self):
+        cleaned = super().clean()
+        # Require password when creating a new record
+        if not self.instance.pk and not cleaned.get('raw_password'):
+            self.add_error('raw_password', 'La contraseña es obligatoria al crear un usuario.')
+        return cleaned
+
+    def save(self, commit=True):
+        personal = super().save(commit=False)
+        raw_pw = self.cleaned_data.get('raw_password')
+        if raw_pw:
+            personal.set_password(raw_pw)
+        if commit:
+            personal.save()
+        return personal
 
 
 class ModifierInline(admin.TabularInline):
@@ -71,12 +105,12 @@ class OrderItemModifierAdmin(admin.ModelAdmin):
 
 @admin.register(Personal)
 class PersonalAdmin(admin.ModelAdmin):
+    form = PersonalAdminForm
     list_display = ('nombre', 'username', 'rol', 'activo', 'created_at')
     list_filter = ('rol', 'activo')
     search_fields = ('nombre', 'username')
-    exclude = ('password',)
-    
-    def save_model(self, request, obj, form, change):
-        if 'password' in form.cleaned_data and form.cleaned_data['password']:
-            obj.set_password(form.cleaned_data['password'])
-        super().save_model(request, obj, form, change)
+    fieldsets = (
+        (None, {
+            'fields': ('nombre', 'username', 'raw_password', 'rol', 'activo'),
+        }),
+    )

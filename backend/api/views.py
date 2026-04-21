@@ -1,8 +1,9 @@
 from django.db.models import Prefetch
 from rest_framework import viewsets, generics, status
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import AccessToken
 
 from .models import Category, Product, ModifierGroup, Modifier, Order, OrderItem, Personal
 from .serializers import (
@@ -14,6 +15,7 @@ from .serializers import (
     PersonalCreateSerializer,
     PersonalLoginSerializer,
 )
+from .permissions import IsAdminPersonal, IsStaffPersonal
 
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -87,7 +89,7 @@ class OrderCreateAPIView(generics.CreateAPIView):
 
 class OrderListAPIView(generics.ListAPIView):
     serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsStaffPersonal]
     http_method_names = ['get']
 
     def get_queryset(self):
@@ -105,7 +107,7 @@ class OrderListAPIView(generics.ListAPIView):
 
 class OrderDetailAPIView(generics.RetrieveAPIView):
     serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsStaffPersonal]
     queryset = Order.objects.prefetch_related(
         Prefetch(
             'items',
@@ -117,7 +119,7 @@ class OrderDetailAPIView(generics.RetrieveAPIView):
 
 class OrderStatusUpdateAPIView(generics.UpdateAPIView):
     serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsStaffPersonal]
     queryset = Order.objects.all()
     http_method_names = ['patch']
 
@@ -158,16 +160,23 @@ class PersonalLoginView(APIView):
     def post(self, request):
         serializer = PersonalLoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+
         try:
             personal = Personal.objects.get(username=serializer.validated_data['username'], activo=True)
         except Personal.DoesNotExist:
             return Response({'detail': 'Credenciales invalidas.'}, status=status.HTTP_401_UNAUTHORIZED)
-        
+
         if not personal.check_password(serializer.validated_data['password']):
             return Response({'detail': 'Credenciales invalidas.'}, status=status.HTTP_401_UNAUTHORIZED)
-        
+
+        token = AccessToken()
+        token['personal_id'] = personal.id
+        token['rol'] = personal.rol
+        token['username'] = personal.username
+        token['nombre'] = personal.nombre
+
         return Response({
+            'access': str(token),
             'id': personal.id,
             'nombre': personal.nombre,
             'username': personal.username,
@@ -177,7 +186,7 @@ class PersonalLoginView(APIView):
 
 class PersonalViewSet(viewsets.ModelViewSet):
     queryset = Personal.objects.all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminPersonal]
 
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
@@ -188,7 +197,7 @@ class PersonalViewSet(viewsets.ModelViewSet):
 class CategoryAdminViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminPersonal]
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
 
     def get_queryset(self):
@@ -198,7 +207,7 @@ class CategoryAdminViewSet(viewsets.ModelViewSet):
 class ProductAdminViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminPersonal]
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
 
     def get_queryset(self):
@@ -208,27 +217,27 @@ class ProductAdminViewSet(viewsets.ModelViewSet):
                 queryset=ModifierGroup.objects.prefetch_related('modifiers'),
             )
         )
-        
+
         rol = self.request.query_params.get('rol')
         if rol == 'barista':
             qs = qs.filter(category__tipo='bebida')
         elif rol == 'cocinero':
             qs = qs.filter(category__tipo='comida')
-        
+
         category_id = self.request.query_params.get('category')
         if category_id:
             qs = qs.filter(category_id=category_id)
-        
+
         return qs.order_by('nombre')
 
 
 class ModifierGroupAdminViewSet(viewsets.ModelViewSet):
     queryset = ModifierGroup.objects.all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminPersonal]
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
 
 
 class ModifierAdminViewSet(viewsets.ModelViewSet):
     queryset = Modifier.objects.all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminPersonal]
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']

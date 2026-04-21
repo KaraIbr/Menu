@@ -7,5 +7,6 @@ venv/
 .venv/
 node_modules/
 dist/
-.env
 *.log
+staticfiles/
+media/
