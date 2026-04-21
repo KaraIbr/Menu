@@ -59,9 +59,8 @@ WSGI_APPLICATION = 'yuki_backend.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default=config('DATABASE_URL'),
-        conn_max_age=600,
-        ssl_require=True
+        default='postgresql://milk:LVvQrRjA4gHGEkcVNZo8TqvRenTbogTE@dpg-d7jq1d1f9bms73fom3d0-a-ad:5432/yuki_db_1u9n',
+        conn_max_age=600
     )
 }
 
