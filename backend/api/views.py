@@ -1,7 +1,6 @@
 from django.db.models import Prefetch
 from rest_framework import viewsets, generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.authentication import AnonymousAuthentication
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
