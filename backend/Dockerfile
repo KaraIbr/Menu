@@ -22,5 +22,5 @@ RUN python manage.py collectstatic --noinput
 # Puerto estándar de Render
 EXPOSE 10000
 
-# Comando de inicio corregido
-CMD ["gunicorn", "yuki_backend.wsgi:application", "--bind", "0.0.0.0:10000"]
+# Comando de inicio: usa $PORT si está disponible, si no usa 10000
+CMD sh -c "gunicorn yuki_backend.wsgi:application --bind 0.0.0.0:${PORT:-10000} --workers 2 --timeout 120"

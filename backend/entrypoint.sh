@@ -19,8 +19,8 @@ python manage.py migrate --noinput
 echo "Collecting static files..."
 python manage.py collectstatic --noinput
 
-echo "Starting gunicorn..."
+echo "Starting gunicorn on port ${PORT:-10000}..."
 exec gunicorn yuki_backend.wsgi:application \
-  --bind 0.0.0.0:8000 \
+  --bind 0.0.0.0:${PORT:-10000} \
   --workers 2 \
   --timeout 120
