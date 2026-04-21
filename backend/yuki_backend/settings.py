@@ -5,9 +5,14 @@ from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = config('SECRET_KEY', default='replace-me-in-prod')
-DEBUG = config('DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = [host.strip() for host in config('ALLOWED_HOSTS', default='*').split(',') if host.strip()]
+SECRET_KEY = 'django-insecure-k3#p9x*7(v!2m$r5z&w8q+a1n4s0b6t9u2y5i8o1p4a7s0d3f6g9h2j5'
+DEBUG = False
+ALLOWED_HOSTS = [
+    'menu-ojc3.onrender.com',
+    'menu-nu-steel.vercel.app',
+    'localhost',
+    '127.0.0.1',
+]
 APPEND_SLASH = False
 
 INSTALLED_APPS = [
@@ -57,11 +62,14 @@ WSGI_APPLICATION = 'yuki_backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='5432'),
+        'NAME': 'yuki_db_1u9n',
+        'USER': 'milk',
+        'PASSWORD': 'LVvQrRjA4gHGEkcVNZo8TqvRenTbogTE',
+        'HOST': 'dpg-d7jq1d1f9bms73fom3d0-a.virginia-postgres.render.com',
+        'PORT': '5432',
+        'OPTIONS': {
+            'sslmode': 'require',
+        },
     }
 }
 
@@ -97,7 +105,14 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=120),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'AUTH_HEADER_TYPES': ('Bearer',),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
 }
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    'https://menu-nu-steel.vercel.app',
+]
 CORS_ALLOW_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = [
+    'https://menu-nu-steel.vercel.app',
+]
