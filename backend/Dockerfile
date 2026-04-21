@@ -12,9 +12,6 @@ COPY . .
 
 RUN mkdir -p staticfiles media
 
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+EXPOSE 10000
 
-EXPOSE 8000
-
-ENTRYPOINT ["/entrypoint.sh"]
+CMD ["gunicorn", "--bind", ":10000", "--workers", "2", "--chdir", "/app", "yuki_backend.wsgi:application"]
