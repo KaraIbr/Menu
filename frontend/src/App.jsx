@@ -7,6 +7,7 @@ import BaristaPage from './pages/BaristaPage';
 import AdminPanel from './pages/AdminPanel';
 import AdminLoginPage from './pages/AdminLoginPage';
 import ProtectedRoute from './components/routes/ProtectedRoute';
+import Dashboard from './pages/Dashboard';
 
 function App() {
   return (
