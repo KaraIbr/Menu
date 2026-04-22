@@ -8,13 +8,12 @@ import AdminPanel from './pages/AdminPanel';
 import AdminLoginPage from './pages/AdminLoginPage';
 import ProtectedRoute from './components/routes/ProtectedRoute';
 import Dashboard from './pages/Dashboard';
-
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
-         <Route path="/Dashboard" element={<Dashboard />} />
+       <Route path="/Dashboard" element={<Dashboard />} />
 
         <Route path="/kiosk" element={<KioskPage />} />
         <Route path="/login" element={<LoginPage />} />
