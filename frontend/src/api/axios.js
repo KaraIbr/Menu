@@ -11,8 +11,15 @@ const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const message = error.response?.data?.detail || error.message || 'Error de conexión';
-    toast.error(message);
+    if (!error.config?.skipErrorToast) {
+      const message =
+        error.response?.data?.detail ||
+        error.response?.data?.message ||
+        error.message ||
+        'Error de conexion';
+      toast.error(message);
+    }
+
     return Promise.reject(error);
   }
 );

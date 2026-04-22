@@ -4,6 +4,12 @@ import { ArrowLeft, User, Lock, Eye, EyeSlash } from '@phosphor-icons/react';
 import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
 
+const ROLE_ROUTES = {
+  admin: '/admin',
+  barista: '/barista',
+  cocinero: '/barista',
+};
+
 const LoginPage = () => {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
@@ -14,27 +20,28 @@ const LoginPage = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    
+
     if (!username || !password) {
       toast.error('Completa todos los campos');
       return;
     }
 
     setIsLoading(true);
-    const user = await login(username, password);
+    const user = await login(username.trim(), password);
     setIsLoading(false);
 
-    if (user) {
-      if (user.rol === 'admin') {
-        navigate('/admin');
-      } else if (user.rol === 'barista') {
-        navigate('/barista');
-      } else if (user.rol === 'cocinero') {
-        navigate('/barista');
-      }
-    } else {
+    if (!user) {
       toast.error('Credenciales incorrectas');
+      return;
     }
+
+    const nextRoute = ROLE_ROUTES[user.rol];
+    if (!nextRoute) {
+      toast.error('Rol no permitido');
+      return;
+    }
+
+    navigate(nextRoute, { replace: true });
   };
 
   return (
@@ -78,7 +85,7 @@ const LoginPage = () => {
 
             <div>
               <label className="block font-fredoka font-semibold text-ink mb-2">
-                Contraseña
+                Contrasena
               </label>
               <div className="relative">
                 <Lock size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/40" />
@@ -86,7 +93,7 @@ const LoginPage = () => {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Tu contraseña"
+                  placeholder="Tu contrasena"
                   className="w-full pl-12 pr-12 py-4 bg-nano rounded-2xl border-2 border-ink/20 font-poppins text-ink placeholder:text-ink/40 focus:outline-none focus:border-cobalt"
                 />
                 <button
@@ -104,7 +111,7 @@ const LoginPage = () => {
               disabled={isLoading}
               className="btn-primary w-full mt-6"
             >
-              {isLoading ? 'Iniciando sesión...' : 'Iniciar sesión'}
+              {isLoading ? 'Iniciando sesion...' : 'Iniciar sesion'}
             </button>
           </form>
 

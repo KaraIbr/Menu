@@ -10,7 +10,8 @@ import {
   X,
   Coffee,
   ForkKnife,
-  UserPlus
+  UserPlus,
+  ShieldCheck
 } from '@phosphor-icons/react';
 import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
@@ -171,9 +172,13 @@ const PersonalSection = () => {
                 <td className="py-3 px-4 font-poppins text-ink/70">{p.username}</td>
                 <td className="py-3 px-4">
                   <span className={`px-3 py-1 rounded-full text-sm font-poppins font-semibold ${
-                    p.rol === 'barista' ? 'bg-coffee/20 text-coffee' : 'bg-coral/20 text-coral'
+                    p.rol === 'admin'
+                      ? 'bg-cobalt/20 text-cobalt'
+                      : p.rol === 'barista'
+                        ? 'bg-coffee/20 text-coffee'
+                        : 'bg-coral/20 text-coral'
                   }`}>
-                    {p.rol === 'barista' ? 'Barista' : 'Cocinero'}
+                    {p.rol === 'admin' ? 'Admin' : p.rol === 'barista' ? 'Barista' : 'Cocinero'}
                   </span>
                 </td>
                 <td className="py-3 px-4">
@@ -303,11 +308,23 @@ const PersonalModal = ({ personal, onClose, onSave }) => {
 
           <div>
             <label className="block font-poppins text-sm text-ink/70 mb-2">Rol</label>
-            <div className="flex gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, rol: 'admin' })}
+                className={`py-3 rounded-xl font-poppins font-semibold transition-all ${
+                  form.rol === 'admin'
+                    ? 'bg-cobalt text-nano'
+                    : 'bg-ink/10 text-ink/70 hover:bg-ink/20'
+                }`}
+              >
+                <ShieldCheck size={20} className="inline mr-2" />
+                Admin
+              </button>
               <button
                 type="button"
                 onClick={() => setForm({ ...form, rol: 'barista' })}
-                className={`flex-1 py-3 rounded-xl font-poppins font-semibold transition-all ${
+                className={`py-3 rounded-xl font-poppins font-semibold transition-all ${
                   form.rol === 'barista'
                     ? 'bg-coffee text-nano'
                     : 'bg-ink/10 text-ink/70 hover:bg-ink/20'
@@ -319,7 +336,7 @@ const PersonalModal = ({ personal, onClose, onSave }) => {
               <button
                 type="button"
                 onClick={() => setForm({ ...form, rol: 'cocinero' })}
-                className={`flex-1 py-3 rounded-xl font-poppins font-semibold transition-all ${
+                className={`py-3 rounded-xl font-poppins font-semibold transition-all ${
                   form.rol === 'cocinero'
                     ? 'bg-coral text-nano'
                     : 'bg-ink/10 text-ink/70 hover:bg-ink/20'
@@ -604,6 +621,18 @@ const ProductsSection = () => {
     loadCategories();
   }, [filterType]);
 
+  const getCategoryForProduct = (product) => {
+    if (product?.category) {
+      return categories.find((category) => category.id === product.category) || {};
+    }
+
+    return (
+      categories.find((category) =>
+        category.products?.some((categoryProduct) => categoryProduct.id === product.id)
+      ) || {}
+    );
+  };
+
   const handleDelete = async (id) => {
     if (!confirm('Estas seguro de eliminar este producto?')) return;
     try {
@@ -641,7 +670,7 @@ const ProductsSection = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {products.map((product) => {
-          const category = categories.find(c => c.id === product.category) || {};
+          const category = getCategoryForProduct(product);
           return (
             <div key={product.id} className="bg-paper p-4 rounded-xl border-2 border-ink/10">
               <div className="flex justify-between items-start">
@@ -687,6 +716,7 @@ const ProductsSection = () => {
         <ProductModal
           product={editingProduct}
           categories={categories}
+          defaultCategoryId={editingProduct ? getCategoryForProduct(editingProduct).id : ''}
           onClose={() => setIsModalOpen(false)}
           onSave={loadProducts}
         />
@@ -695,10 +725,10 @@ const ProductsSection = () => {
   );
 };
 
-const ProductModal = ({ product, categories, onClose, onSave }) => {
+const ProductModal = ({ product, categories, defaultCategoryId, onClose, onSave }) => {
   const [form, setForm] = useState({
     nombre: product?.nombre || '',
-    category: product?.category || '',
+    category: product?.category || defaultCategoryId || '',
     descripcion: product?.descripcion || '',
     precio_base: product?.precio_base || '',
     activo: product?.activo ?? true,
